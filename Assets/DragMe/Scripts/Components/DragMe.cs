@@ -39,7 +39,8 @@ namespace Studio.OverOne.DragMe.Components
         private readonly List<ITransformData> _transformHistory = new List<ITransformData>();
 
         public bool notUpdatePos;
-
+        public bool setOriginPos;
+        public Vector3 originPos;
         #endregion
 
         #region " Unity Methods "
@@ -60,7 +61,11 @@ namespace Studio.OverOne.DragMe.Components
                 Assert.IsNotNull(_rigidbody, Errors.IsNull.Fmt(nameof(Rigidbody)));
             }
         }
-
+        public void SetOriginPos(Vector3 pos)
+        {
+            setOriginPos = true;
+            originPos = pos;
+        }
         private void Start()
         {
             RegisterEventListeners();
@@ -70,9 +75,15 @@ namespace Studio.OverOne.DragMe.Components
                 _components.Add(this);
             if(!notUpdatePos)
             {
-                _desiredPosition = WorldPosition;
+                if(setOriginPos)
+                {
+                    _desiredPosition = originPos;
+                }
+                else
+                {
+                    _desiredPosition = WorldPosition;
+                }
             }
-
             // Add our starting parent and position.
             _transformHistory.Add(new TransformData(
                 WorldPosition,
@@ -429,8 +440,9 @@ namespace Studio.OverOne.DragMe.Components
         #region " Select Methods "
 
         public bool TrySelect(Vector3 mousePosition) 
-        { 
-            if(!CanSelect)
+        {
+            Debug.Log("TrySelect");
+            if (!CanSelect)
                 return false;
 
             Selected = true;
@@ -446,8 +458,8 @@ namespace Studio.OverOne.DragMe.Components
         #region " Deselect Methods "
 
         public bool TryDeselect(Vector3 mousePosition) 
-        { 
-            if(!CanDeselect)
+        {
+            if (!CanDeselect)
                 return false;
 
             Selected = false;
@@ -463,8 +475,9 @@ namespace Studio.OverOne.DragMe.Components
         #region " Grab Methods "
         
         public bool TryGrab(Vector3 mousePosition) 
-        { 
-            if(!CanGrab)
+        {
+            Debug.Log("TryGrab");
+            if (!CanGrab)
                 return false;
 
             int lMyIndex = transform.GetSiblingIndex();
@@ -491,8 +504,9 @@ namespace Studio.OverOne.DragMe.Components
         #region " Release Methods "
 
         public bool TryRelease(Vector3 mousePosition) 
-        { 
-            if(!CanRelease)
+        {
+            Debug.Log("TryRelease");
+            if (!CanRelease)
                 return false;
 
             IReleasedEventData lData = new ReleasedEventData(mousePosition, this);
@@ -507,6 +521,7 @@ namespace Studio.OverOne.DragMe.Components
         
         public bool TryPlace(Vector3 mousePosition, Components.DragMe comp)
         {
+            Debug.Log("TryPlace");
             if(this.transform == comp.transform)
                 throw new System.Exception("ERROR: DragMe component tried to place itself on itself.");
 
@@ -528,8 +543,9 @@ namespace Studio.OverOne.DragMe.Components
         #region " Drag Methods "
 
         public bool TryDrag(Vector3 mousePosition) 
-        { 
-            if(!CanDrag)
+        {
+            Debug.Log("TryDrag");
+            if (!CanDrag)
                 return false;
 
             if(TryAddToHistory(mousePosition, out IDraggedEventData lData))
@@ -544,6 +560,7 @@ namespace Studio.OverOne.DragMe.Components
 
         public bool TryResetTransform(Vector3 mousePosition)
         {
+            Debug.Log("TryResetTransform");
             IResetEventData lData = new ResetEventData(mousePosition, this);
             e_Reset.Invoke(lData);
 

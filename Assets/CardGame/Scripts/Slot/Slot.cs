@@ -8,7 +8,6 @@ public class Slot : MonoBehaviour
 {
     public DragMe dragMe;
     public TextMeshPro name;
-    
     public CardView cardView;
     public TaskPanelView taskPanelView;
     public bool HasCard
@@ -29,9 +28,8 @@ public class Slot : MonoBehaviour
     public void Pos(int x,int y)
     {
         var spaceX =1.5f;
-        var spaceY =10;
+        var spaceY =3.3f;
         dragMe.SetPos((new Vector3(x * spaceX, 0.5f, -y * spaceY)));
-        Debug.Log(dragMe.DesiredPosition);
     }
     /// <summary>
     /// 卡片是否可以放置
@@ -39,7 +37,7 @@ public class Slot : MonoBehaviour
     /// <returns></returns>
     public bool IsCardCanPlaced(CardView cardView)
     {
-        return taskPanelView.CanAddCard(this,cardView)
+        return taskPanelView.CanAddCard(this, cardView.cardModel);
     }
     /// <summary>
     /// 卡片尝试放置
@@ -48,7 +46,7 @@ public class Slot : MonoBehaviour
     public void OnCardTryPlaced(CardView cardView)
     {
         var cardModel = cardView.GetModel() as CardModel;
-        
+        this.cardView = cardView;
     }
     
 }

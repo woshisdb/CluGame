@@ -45,8 +45,7 @@ namespace Studio.OverOne.DragMe.Components
         public void PlaceMe(IPlacedEventData eventData)
         {
             if(eventData.PlacedComponent != this)
-                return; 
-            
+                return;
             Parent = eventData.PlacementComponent
                 .transform;
         }

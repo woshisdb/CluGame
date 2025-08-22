@@ -1,3 +1,8 @@
+using System.Collections.Generic;
+using Studio.OverOne.DragMe.Components;
+using UnityEngine;
+
+[SerializeField]
 public class CardsManager
 {
     /// <summary>
@@ -20,9 +25,20 @@ public class CardsManager
             {
                 if (cardModel.hasSwitch())
                 {
-                    GameFrameWork.Instance.ViewModelManager.RefreshView(cardModel);
+                    GameFrameWork.Instance.viewModelManager.RefreshView(cardModel);
                 }
             }
+        }
+    }
+    public void Init()
+    {
+        int no = 0;
+        foreach(var x in cardmodels)
+        {
+            var card = GameFrameWork.Instance.gameConfig.viewDic[x.cardData.viewType];
+            var obj = GameObject.Instantiate(card);
+            obj.transform.GetComponent<DragMe>().SetOriginPos(new Vector3(no*3,1,0));
+            no++;
         }
     }
 }

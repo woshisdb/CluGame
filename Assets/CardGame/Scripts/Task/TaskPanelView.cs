@@ -43,11 +43,11 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
         this.description.text = taskPanelModel.description;
         if (taskPanelModel.exeNode.GetExeType() == ExeType.Select)//如果是选择卡片节点
         {
-            slotRoot.setEnable(true);
-            cardRoot.setEnable(false);
+            slotRoot.gameObject.SetActive(true);
+            cardRoot.gameObject.SetActive(false);
             foreach (var x in slotMap)
             {
-                GameObject.Destroy(x.Key);
+                GameObject.Destroy(x.Key.gameObject);
             }
 
             slotMap.Clear();
@@ -60,17 +60,19 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
                 slotMap.Add(obj.GetComponent<Slot>(), x);
                 obj.transform.SetParent(slotRoot);
                 obj.GetComponent<Slot>().Pos(no % 3, no / 3);
+                obj.GetComponent<Slot>().name.text = x.name;
+                obj.GetComponent<Slot>().taskPanelView = this;
             }
         }
         else if (taskPanelModel.exeNode.GetExeType() == ExeType.WasterTime)//花费时间的节点
         {
-            slotRoot.setEnable(false);
-            cardRoot.setEnable(false);
+            slotRoot.gameObject.SetActive(false);
+            cardRoot.gameObject.SetActive(false);
         }
         else//如果是结束节点
         {
-            slotRoot.setEnable(false);
-            cardRoot.setEnable(true);
+            slotRoot.gameObject.SetActive(false);
+            cardRoot.gameObject.SetActive(true);
         }
     }
     /// <summary>
@@ -89,7 +91,7 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     public bool CanAddCard(Slot slot, CardModel cardModel)
     {
         var require = slotMap[slot];
-        return require.Require(card);
+        return require.Require(cardModel);
     }
     /// <summary>
     /// 添加卡片
@@ -108,4 +110,8 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
         taskPanelModel.RemoveCard(cardRequire);
     }
 
+    public void Release()
+    {
+        throw new System.NotImplementedException();
+    }
 }

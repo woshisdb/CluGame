@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 public class ViewModelManager
 {
     public Dictionary<IModel, List<IView>> mapper;
@@ -8,7 +10,7 @@ public class ViewModelManager
 
     public void RefreshView(IModel model)
     {
-        if (mapper.ContainKey(model))
+        if (mapper.ContainsKey(model))
         {
             foreach (var x in mapper[model])
             {
@@ -19,7 +21,7 @@ public class ViewModelManager
 
     public void Bind(IModel model, IView view)
     {
-        if (!mapper.ContainKey(model))
+        if (!mapper.ContainsKey(model))
         {
             mapper[model] = new List<IView>();
         }
@@ -28,7 +30,7 @@ public class ViewModelManager
     public void ReleaseView(IView view)
     {
         var model = view.GetModel();
-        mapper[model].remove(view);
+        mapper[model].Remove(view);
     }
 
     public void ReleaseModel(IModel model)

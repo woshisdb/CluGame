@@ -1,14 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using TMPro;
 using UnityEngine;
 
 public class TaskView : SerializedMonoBehaviour,IView
 {
     public TextMeshPro text;
     public Sprite Sprite;
-
-    public Progress Progress;
+    public TextMeshProUGUI endTime;
     [SerializeField]
     public TaskPanelModel model;
     public void BindModel(IModel model)
@@ -29,12 +29,12 @@ public class TaskView : SerializedMonoBehaviour,IView
 
     public void Refresh()
     {
-        progress.transform.setEnable(false);
-        if(exeNode.GetExeType() == ExeType.WasterTime)
+        endTime.enabled = (false);
+        if(model.exeNode.GetExeType() == ExeType.WasterTime)
         {
-            progress.transform.setEnable(true);
+            endTime.gameObject.SetActive(true);
         }
-        else if(exeNode.GetExeType() == ExeType.Select)
+        else if(model.exeNode.GetExeType() == ExeType.Select)
         {
             
         }
@@ -46,7 +46,7 @@ public class TaskView : SerializedMonoBehaviour,IView
 
     public void StateTransition()
     {
-        var hasSwitch = taskPanelModel.Switch();
+        var hasSwitch = model.Switch();
         if (hasSwitch)
         {
             Refresh();//刷新当前的状态
@@ -62,5 +62,10 @@ public class TaskView : SerializedMonoBehaviour,IView
         {
             GameFrameWork.Instance.AddCardByCardModel(card);
         }
+    }
+
+    public void Release()
+    {
+        throw new System.NotImplementedException();
     }
 }

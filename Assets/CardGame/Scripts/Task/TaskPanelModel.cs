@@ -62,9 +62,9 @@ public class TaskPanelModel:IModel
     /// 刷新并且返回状态是否变化
     /// </summary>
     /// <returns></returns>
-    public void hasSwitch()
+    public bool hasSwitch()
     {
-        
+        return true;
     }
     /// <summary>
     /// 切换
@@ -74,7 +74,7 @@ public class TaskPanelModel:IModel
         if(exeNode.GetExeType() == ExeType.WasterTime)
         {
             var wasterNode = (WasterTimeExeNode)exeNode;
-            if (wasterNode.CanProcess())
+            if (wasterNode.CanProcess(this))
             {
                 wasterNode.Process(this);
                 return true;
@@ -83,7 +83,7 @@ public class TaskPanelModel:IModel
         else if(exeNode.GetExeType() == ExeType.Select)
         {
             var selectNode = (SelectExeNode)exeNode;
-            if (selectNode.CanProcess())
+            if (selectNode.CanProcess(this))
             {
                 selectNode.Process(this);
                 return true;

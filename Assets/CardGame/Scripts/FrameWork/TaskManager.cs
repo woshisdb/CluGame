@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+[SerializeField]
 public class TaskManager
 {
     /// <summary>
@@ -16,7 +20,7 @@ public class TaskManager
         {
             if (task.hasSwitch())
             {
-                GameFrameWork.Instance.ViewModelManager.RefreshView(task);
+                GameFrameWork.Instance.viewModelManager.RefreshView(task);
             }
         }
     }

@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Studio.OverOne.DragMe.Data.Abstractions;
+using Studio.OverOne.DragMe.Events;
 using TMPro;
 using UnityEngine;
 
@@ -31,6 +33,11 @@ public class CardView : MonoBehaviour,IView
         }
     }
 
+    public void Release()
+    {
+        Debug.Log("shuissssss");
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -44,5 +51,10 @@ public class CardView : MonoBehaviour,IView
         {
             Refresh();
         }
+    }
+    public void Placed(IPlacedEventData placedEvent)
+    {
+        var placement = placedEvent.PlacementComponent;
+        placement.GetComponent<Slot>().OnCardTryPlaced(this);
     }
 }
