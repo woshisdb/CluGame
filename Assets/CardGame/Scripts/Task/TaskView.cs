@@ -5,6 +5,10 @@ using UnityEngine;
 
 public class TaskView : SerializedMonoBehaviour,IView
 {
+    public TextMeshPro text;
+    public Sprite Sprite;
+
+    public Progress Progress;
     [SerializeField]
     public TaskPanelModel model;
     public void BindModel(IModel model)
@@ -25,6 +29,38 @@ public class TaskView : SerializedMonoBehaviour,IView
 
     public void Refresh()
     {
+        progress.transform.setEnable(false);
+        if(exeNode.GetExeType() == ExeType.WasterTime)
+        {
+            progress.transform.setEnable(true);
+        }
+        else if(exeNode.GetExeType() == ExeType.Select)
+        {
+            
+        }
+        else
+        {
+            
+        }
+    }
 
+    public void StateTransition()
+    {
+        var hasSwitch = taskPanelModel.Switch();
+        if (hasSwitch)
+        {
+            Refresh();//刷新当前的状态
+        }
+    }
+    /// <summary>
+    /// 交出一系列的卡牌
+    /// </summary>
+    /// <returns></returns>
+    public void ReturnCards(List<CardModel> cards)
+    {
+        foreach (var card in cards)
+        {
+            GameFrameWork.Instance.AddCardByCardModel(card);
+        }
     }
 }

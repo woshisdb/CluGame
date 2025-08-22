@@ -2,22 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CardData
-{
-    public string title;
-    public string description;
-    public ViewType viewType;
-    public HashSet<CardFlag> cardFlags;
-    public CardEnum cardEnum;
-    public CardData()
-    {
-        cardFlags = new HashSet<CardFlag>();
-        cardEnum = new CardEnum();
-    }
-}
-
 public class CardModel:IModel
 {
+    /// <summary>
+    /// 代表这个卡牌还可以用吗
+    /// </summary>
+    public bool enable;
     public CardData cardData;
     public IView CreateView()
     {
@@ -25,5 +15,20 @@ public class CardModel:IModel
         var obj = GameObject.Instantiate(template);
         var cardView = obj.GetComponent<CardView>();
         return cardView;
+    }
+
+    public CardModel(CardData cardData)
+    {
+        this.cardData = cardData;
+    }
+
+    public bool NeedRefresh()
+    {
+        return cardData.needRefresh;
+    }
+
+    public bool hasSwitch()
+    {
+        return false;
     }
 }

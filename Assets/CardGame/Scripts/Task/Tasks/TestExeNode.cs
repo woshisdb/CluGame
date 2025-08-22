@@ -21,6 +21,7 @@ public class Test_SelectExeNode : SelectExeNode
     {
         cardRequires = new List<CardRequire>()
         {
+            new Test_CardRequire(),
             new Test_CardRequire()
         };
     }

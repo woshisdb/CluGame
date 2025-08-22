@@ -8,7 +8,8 @@ public class CardView : MonoBehaviour,IView
     public TextMeshPro title;
     public TextMeshPro description;
     public CardModel cardModel;
-
+    public TextMeshPro countDown;
+    
     public void BindModel(IModel model)
     {
         this.cardModel = (CardModel)model;
@@ -22,8 +23,12 @@ public class CardView : MonoBehaviour,IView
 
     public void Refresh()
     {
-        this.title.text = cardModel.cardData.title;
-        this.description.text = cardModel.cardData.description;
+        if (cardModel!=null)
+        {
+            this.title.text = cardModel.cardData.title;
+            this.description.text = cardModel.cardData.description;
+            this.countDown.text = "倒计时";
+        }
     }
 
     // Start is called before the first frame update
@@ -35,6 +40,9 @@ public class CardView : MonoBehaviour,IView
     // Update is called once per frame
     void Update()
     {
-        
+        if (cardModel!=null && cardModel.cardData.needRefresh)
+        {
+            Refresh();
+        }
     }
 }

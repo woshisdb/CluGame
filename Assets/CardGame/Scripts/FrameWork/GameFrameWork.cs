@@ -11,6 +11,10 @@ public class GameFrameWork : MonoBehaviour
     public GameObject taskPanel;
     public Transform Table;
     // Update is called once per frame
+    public CardsManager cardsManager;
+    public TaskManager taskManager;
+
+    public ViewModelManager ViewModelManager;
     void Awake()
     {
         
@@ -19,6 +23,18 @@ public class GameFrameWork : MonoBehaviour
     {
         var cardTemplate = gameConfig.viewDic[cardData.viewType];
         var obj = GameObject.Instantiate(cardTemplate);
+        var cv = obj.getComponet<CardView>();
+        cv.BindMode(cardData.CreateModel());
         obj.transform.SetParent(Table);
     }
+
+    public void AddCardByCardModel(CardModel cardModel)
+    {
+        var cardTemplate = gameConfig.viewDic[cardData.viewType];
+        var obj = GameObject.Instantiate(cardTemplate);
+        var cv = obj.getComponet<CardView>();
+        cv.BindMode(cardModel);
+        obj.transform.SetParent(Table);
+    }
+    
 }

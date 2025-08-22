@@ -8,6 +8,13 @@ public class Slot : MonoBehaviour
 {
     public DragMe dragMe;
     public TextMeshPro name;
+    
+    public CardView cardView;
+    public TaskPanelView taskPanelView;
+    public bool HasCard
+    {
+        get { return cardView != null; }
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -26,8 +33,22 @@ public class Slot : MonoBehaviour
         dragMe.SetPos((new Vector3(x * spaceX, 0.5f, -y * spaceY)));
         Debug.Log(dragMe.DesiredPosition);
     }
-    public void Set()
+    /// <summary>
+    /// 卡片是否可以放置
+    /// </summary>
+    /// <returns></returns>
+    public bool IsCardCanPlaced(CardView cardView)
     {
-        Debug.Log("set");
+        return taskPanelView.CanAddCard(this,cardView)
     }
+    /// <summary>
+    /// 卡片尝试放置
+    /// </summary>
+    /// <returns></returns>
+    public void OnCardTryPlaced(CardView cardView)
+    {
+        var cardModel = cardView.GetModel() as CardModel;
+        
+    }
+    
 }

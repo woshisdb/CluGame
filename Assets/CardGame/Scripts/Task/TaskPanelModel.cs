@@ -59,21 +59,37 @@ public class TaskPanelModel:IModel
         return 1;
     }
     /// <summary>
+    /// 刷新并且返回状态是否变化
+    /// </summary>
+    /// <returns></returns>
+    public void hasSwitch()
+    {
+        
+    }
+    /// <summary>
     /// 切换
     /// </summary>
-    public void Switch()
+    public bool Switch()
     {
         if(exeNode.GetExeType() == ExeType.WasterTime)
         {
             var wasterNode = (WasterTimeExeNode)exeNode;
-            wasterNode.Process(this);
+            if (wasterNode.CanProcess())
+            {
+                wasterNode.Process(this);
+                return true;
+            }
         }
         else if(exeNode.GetExeType() == ExeType.Select)
         {
             var selectNode = (SelectExeNode)exeNode;
-            selectNode.Process(this);
+            if (selectNode.CanProcess())
+            {
+                selectNode.Process(this);
+                return true;
+            }
         }
-        else///结束
+        else///结束节点
         {
             var finishNode = (FinishExeNode)exeNode;
             var cards = finishNode.GetCards(this);
@@ -81,6 +97,10 @@ public class TaskPanelModel:IModel
             {
                 GameFrameWork.Instance.AddCardByCardData(x);
             }
+
+            return true;
         }
+
+        return false;
     }
 }
