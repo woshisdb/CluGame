@@ -14,10 +14,12 @@ public class GameFrameWork : MonoBehaviour
     public CardsManager cardsManager;
     public TaskManager taskManager;
 
-    public ViewModelManager ViewModelManager;
+    public ViewModelManager viewModelManager;
     void Awake()
     {
-        
+        cardsManager = new cardsManager();
+        taskManager = new TaskManager();
+        viewModelManager = new ViewModelManager();
     }
     public void AddCardByCardData(CardData cardData)
     {
