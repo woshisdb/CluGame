@@ -35,9 +35,11 @@ public class CardsManager
         int no = 0;
         foreach(var x in cardmodels)
         {
-            var card = GameFrameWork.Instance.gameConfig.viewDic[x.cardData.viewType];
-            var obj = GameObject.Instantiate(card);
-            obj.transform.GetComponent<DragMe>().SetOriginPos(new Vector3(no*3,1,0));
+            GameFrameWork.Instance.AddCardByCardModel(x, new Vector3(no * 3, 0, 7));
+            //var card = GameFrameWork.Instance.gameConfig.viewDic[x.cardData.viewType];
+            //var obj = GameObject.Instantiate(card);
+            //obj.transform.GetComponent<DragMe>().SetOriginPos(new Vector3(no*3,1,0));
+            //obj.GetComponent<CardView>().BindModel(x);
             no++;
         }
     }

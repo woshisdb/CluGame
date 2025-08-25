@@ -1,13 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+[SerializeField]
 public class CardModel:IModel
 {
     /// <summary>
     /// 代表这个卡牌还可以用吗
     /// </summary>
     public bool enable;
+    [SerializeField]
     public CardData cardData;
     public IView CreateView()
     {

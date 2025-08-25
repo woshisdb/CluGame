@@ -27,6 +27,8 @@ public abstract class CardRequire
 public enum ExeEnum
 {
     e1,
+    e2,
+    e3,
 }
 
 public enum ExeType

@@ -26,18 +26,30 @@ public class Test_SelectExeNode : SelectExeNode
         };
     }
 
-    public override bool CanProcess(TaskPanelModel task)
+    public override bool CanClickChange(TaskPanelModel task)
     {
-        throw new System.NotImplementedException();
+        task.SetExeNode(new TestTimeNode());
+        return true;
     }
+
+    //public override bool CanProcess(TaskPanelModel task)
+    //{
+    //    return true;
+    //}
 
     public override ExeEnum GetExeEnum()
     {
         return ExeEnum.e1;
     }
 
-    public override void Process(TaskPanelModel task)
+    //public override void Process(TaskPanelModel task)
+    //{
+    //    task.SetExeNode(new TestTimeNode());
+    //}
+
+    public override bool WhenCardChange(TaskPanelModel task)
     {
-        throw new System.NotImplementedException();
+        return false;
+        //throw new NotImplementedException();
     }
 }

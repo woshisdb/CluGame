@@ -14,5 +14,12 @@ public enum CardFlag
 /// </summary>
 public enum CardEnum
 {
-    e1
+    /// <summary>
+    /// 当前拥有的金币
+    /// </summary>
+    money,
+    /// <summary>
+    /// 当前的生命值
+    /// </summary>
+    hp,
 }

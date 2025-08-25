@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using Studio.OverOne.DragMe.Components;
 using UnityEngine;
 
 public class GameFrameWork : SerializedMonoBehaviour
@@ -20,24 +21,36 @@ public class GameFrameWork : SerializedMonoBehaviour
     void Awake()
     {
         cardsManager.Init();
+        taskManager.Init();
+        viewModelManager.Init();
     }
-    public void AddCardByCardData(CardData cardData)
+    public void AddCardByCardData(CardData cardData, Vector3 pos)
     {
         var cardTemplate = gameConfig.viewDic[cardData.viewType];
-        var obj = GameObject.Instantiate(cardTemplate);
-        var cv = obj.GetComponent<CardView>();
-        cv.BindModel(cardData.CreateModel());
-        obj.transform.SetParent(Table);
+        AddCardByCardModel(cardData.CreateModel(),pos);
     }
 
-    public void AddCardByCardModel(CardModel cardModel)
+    public GameObject AddCardByCardModel(CardModel cardModel,Vector3 pos)
     {
         var cardTemplate = gameConfig.viewDic[cardModel.cardData.viewType];
         var obj = GameObject.Instantiate(cardTemplate);
         var cv = obj.GetComponent<CardView>();
         cv.BindModel(cardModel);
-        obj.transform.SetParent(Table);
+        obj.transform.GetComponent<DragMe>().SetOriginPos(pos);
+        viewModelManager.Bind(cardModel, cv);
+        return obj;
     }
+    public GameObject AddTaskByData(TaskPanelModel model,Vector3 pos)
+    {
+        var taskTemplate = gameConfig.taskTemplate;
+        var obj = GameObject.Instantiate(taskTemplate);
+        var cv = obj.GetComponent<TaskView>();
+        cv.BindModel(model);
+        obj.transform.GetComponent<DragMe>().SetOriginPos(pos);
+        viewModelManager.Bind(model, cv);
+        return obj;
+    }
+
     public void Update()
     {
         cardsManager.Update();

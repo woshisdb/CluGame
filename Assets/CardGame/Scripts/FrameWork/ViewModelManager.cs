@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ViewModelManager
 {
@@ -18,13 +19,18 @@ public class ViewModelManager
             }
         }
     }
-
+    public void Init()
+    {
+        //var obj = GameObject.Find("Task");
+        //Bind(obj.GetComponent<TaskView>().model, obj.GetComponent<TaskView>());
+    }
     public void Bind(IModel model, IView view)
     {
         if (!mapper.ContainsKey(model))
         {
             mapper[model] = new List<IView>();
         }
+        mapper[model].Add(view);
     }
     
     public void ReleaseView(IView view)

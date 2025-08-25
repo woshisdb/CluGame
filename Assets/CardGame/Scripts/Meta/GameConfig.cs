@@ -7,4 +7,5 @@ public class GameConfig : SerializedScriptableObject
 {
     public GameObject slotTemplate;
     public Dictionary<ViewType, GameObject> viewDic;
+    public GameObject taskTemplate;
 }

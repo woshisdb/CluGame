@@ -113,7 +113,29 @@ namespace Studio.OverOne.DragMe.Components
             Parent = lStart.Parent?.transform;
             DesiredPosition = lStart.WorldPosition;
         }
+        public void RecordStartPos(IGrabbedEventData eventData)
+        {
+            var startTrans = new TransformData(
+                eventData.GrabbedComponent.DesiredPosition,
+                eventData.GrabbedComponent.MyParentDragMeComponent
+                ) ;
+            eventData.GrabbedComponent.startTrans = startTrans;
+        }
+        public void ResetToStartWhenNeed(IResetEventData eventData)
+        {
+            if (eventData.ResetComponent != this)
+                return;
+            if(!eventData.ResetComponent.needResetBeginPos)
+            {
+                return;
+            }
+            eventData.ResetComponent.needResetBeginPos = false;
+            ITransformData lStart = eventData.ResetComponent.startTrans;
 
+            Parent = lStart.Parent?.transform;
+            DesiredPosition = lStart.WorldPosition;
+            eventData.ResetComponent.startTrans = null;
+        }
         #endregion
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using Studio.OverOne.DragMe.Components;
 using TMPro;
 using UnityEngine;
 
@@ -12,21 +13,32 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     public Dictionary<Slot, CardRequire> slotMap;
     public Transform slotRoot;
     public Transform cardRoot;
+    public TextMeshPro timeRemain;
 
     public void BindModel(IModel model)
     {
         this.taskPanelModel = (TaskPanelModel)model;
+        GameFrameWork.Instance.viewModelManager.Bind(model, this);
         Refresh();
     }
 
     public void onCloseClick()
     {
         gameObject.SetActive(false);
+        GameFrameWork.Instance.viewModelManager.ReleaseView(this);
+        this.taskPanelModel = null;
     }
 
     public void onContinueClick()
     {
-        StateTransition();
+        if(taskPanelModel.CanClickSwitch())
+        {
+            GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelModel);
+        }
+        else
+        {
+            return;
+        }
     }
 
     public IModel GetModel()
@@ -45,6 +57,7 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
         {
             slotRoot.gameObject.SetActive(true);
             cardRoot.gameObject.SetActive(false);
+            timeRemain.gameObject.SetActive(false);
             foreach (var x in slotMap)
             {
                 GameObject.Destroy(x.Key.gameObject);
@@ -62,36 +75,52 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
                 obj.GetComponent<Slot>().Pos(no % 3, no / 3);
                 obj.GetComponent<Slot>().name.text = x.name;
                 obj.GetComponent<Slot>().taskPanelView = this;
+                obj.GetComponent<Slot>().isInit = true;
+                if (taskPanelModel.cardsMap.ContainsKey(x))//包含这个卡的内容
+                {
+                    var card = GameFrameWork.Instance.AddCardByCardModel(taskPanelModel.cardsMap[x],new Vector3(0,0,0));
+                    var dragMe = card.GetComponent<DragMe>();
+                    obj.GetComponent<DragMe>().TryPlace(new Vector3(0,0,0),dragMe);
+                }
+                obj.GetComponent<Slot>().isInit = false;
             }
         }
         else if (taskPanelModel.exeNode.GetExeType() == ExeType.WasterTime)//花费时间的节点
         {
             slotRoot.gameObject.SetActive(false);
             cardRoot.gameObject.SetActive(false);
+            timeRemain.gameObject.SetActive(true);
+            timeRemain.text = taskPanelModel.GetRemainTime().ToString();
         }
         else//如果是结束节点
         {
             slotRoot.gameObject.SetActive(false);
             cardRoot.gameObject.SetActive(true);
+            timeRemain.gameObject.SetActive(false);
         }
     }
     /// <summary>
     /// 进行状态转移
     /// </summary>
     /// <returns></returns>
-    public void StateTransition()
-    {
-        var hasSwitch = taskPanelModel.Switch();
-        if (hasSwitch)
-        {
-            Refresh();//刷新当前的状态
-        }
-    }
+    //public void StateTransition()
+    //{
+    //    var hasSwitch = taskPanelModel.CheckTimeSwitch();
+    //    if (hasSwitch)
+    //    {
+    //        GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelModel);
+    //    }
+    //}
 
     public bool CanAddCard(Slot slot, CardModel cardModel)
     {
-        var require = slotMap[slot];
-        return require.Require(cardModel);
+        Debug.Log(slot.gameObject.name);
+        if(slotMap.ContainsKey(slot))
+        {
+            var require = slotMap[slot];
+            return require.Require(cardModel);
+        }
+        return false;
     }
     /// <summary>
     /// 添加卡片
@@ -112,6 +141,5 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
 
     public void Release()
     {
-        throw new System.NotImplementedException();
     }
 }

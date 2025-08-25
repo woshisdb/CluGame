@@ -8,7 +8,7 @@ public class TaskView : SerializedMonoBehaviour,IView
 {
     public TextMeshPro text;
     public Sprite Sprite;
-    public TextMeshProUGUI endTime;
+    public TextMeshPro endTime;
     [SerializeField]
     public TaskPanelModel model;
     public void BindModel(IModel model)
@@ -29,10 +29,11 @@ public class TaskView : SerializedMonoBehaviour,IView
 
     public void Refresh()
     {
-        endTime.enabled = (false);
+        endTime.gameObject.SetActive(false);
         if(model.exeNode.GetExeType() == ExeType.WasterTime)
         {
             endTime.gameObject.SetActive(true);
+            endTime.text = model.GetRemainTime().ToString();
         }
         else if(model.exeNode.GetExeType() == ExeType.Select)
         {
@@ -44,14 +45,14 @@ public class TaskView : SerializedMonoBehaviour,IView
         }
     }
 
-    public void StateTransition()
-    {
-        var hasSwitch = model.Switch();
-        if (hasSwitch)
-        {
-            Refresh();//刷新当前的状态
-        }
-    }
+    //public void StateTransition()
+    //{
+    //    var hasSwitch = model.Switch();
+    //    if (hasSwitch)
+    //    {
+    //        Refresh();//刷新当前的状态
+    //    }
+    //}
     /// <summary>
     /// 交出一系列的卡牌
     /// </summary>
@@ -60,7 +61,7 @@ public class TaskView : SerializedMonoBehaviour,IView
     {
         foreach (var card in cards)
         {
-            GameFrameWork.Instance.AddCardByCardModel(card);
+            GameFrameWork.Instance.AddCardByCardModel(card,new Vector3(0,0,0));
         }
     }
 

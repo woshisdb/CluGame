@@ -38,6 +38,8 @@ namespace Studio.OverOne.DragMe.Components
         // TransformData collection containing the Parent and Transform information of the DragMe component.
         private readonly List<ITransformData> _transformHistory = new List<ITransformData>();
 
+        public ITransformData startTrans;
+
         public bool notUpdatePos;
         public bool setOriginPos;
         public Vector3 originPos;
@@ -86,7 +88,7 @@ namespace Studio.OverOne.DragMe.Components
             }
             // Add our starting parent and position.
             _transformHistory.Add(new TransformData(
-                WorldPosition,
+                _desiredPosition,
                 MyParentDragMeComponent));
         }
         public void SetPos(Vector3 pos)
@@ -518,7 +520,7 @@ namespace Studio.OverOne.DragMe.Components
         #endregion
 
         #region " Place Methods "
-        
+        public bool needResetBeginPos;
         public bool TryPlace(Vector3 mousePosition, Components.DragMe comp)
         {
             Debug.Log("TryPlace");
@@ -531,6 +533,11 @@ namespace Studio.OverOne.DragMe.Components
             
             if(!Available)
                 return false;
+            if(!GetComponent<Slot>().IsCardCanPlaced(comp.GetComponent<CardView>()))
+            {
+                comp.needResetBeginPos = true;
+                return false;
+            }
 
             IPlacedEventData lData = new PlacedEventData(mousePosition, comp, this);
             comp.e_Placed.Invoke(lData);

@@ -1,16 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using Studio.OverOne.DragMe.Data.Abstractions;
 using Studio.OverOne.DragMe.Events;
 using TMPro;
 using UnityEngine;
 
-public class CardView : MonoBehaviour,IView
+public class CardView : SerializedMonoBehaviour,IView
 {
     public TextMeshPro title;
     public TextMeshPro description;
+    [SerializeField]
     public CardModel cardModel;
     public TextMeshPro countDown;
+    public Slot slot;
     
     public void BindModel(IModel model)
     {
@@ -22,7 +25,14 @@ public class CardView : MonoBehaviour,IView
     {
         return cardModel;
     }
-
+    public void onGrab()
+    {
+        if(slot != null)
+        {
+            slot.OnCardReleased(this);
+            this.slot = null;
+        }
+    }
     public void Refresh()
     {
         if (cardModel!=null)
@@ -32,7 +42,6 @@ public class CardView : MonoBehaviour,IView
             this.countDown.text = "倒计时";
         }
     }
-
     public void Release()
     {
         Debug.Log("shuissssss");

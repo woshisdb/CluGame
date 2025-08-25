@@ -31,6 +31,7 @@ public class TaskPanelModel:IModel
     /// 卡片映射
     /// </summary>
     public Dictionary<CardRequire,CardModel> cardsMap;
+    public float beginTime;
     public TaskPanelModel()
     {
         cardsMap = new Dictionary<CardRequire,CardModel>();
@@ -59,48 +60,107 @@ public class TaskPanelModel:IModel
         return 1;
     }
     /// <summary>
-    /// 刷新并且返回状态是否变化
+    /// 时间变化时状态变化
     /// </summary>
     /// <returns></returns>
-    public bool hasSwitch()
+    public bool CheckTimeSwitch()
     {
-        return true;
-    }
-    /// <summary>
-    /// 切换
-    /// </summary>
-    public bool Switch()
-    {
-        if(exeNode.GetExeType() == ExeType.WasterTime)
+        if(exeNode.GetExeType()== ExeType.WasterTime)
         {
-            var wasterNode = (WasterTimeExeNode)exeNode;
-            if (wasterNode.CanProcess(this))
+            var te = (WasterTimeExeNode)exeNode;
+            var remainTime = ((((WasterTimeExeNode)(exeNode)).GetTime() + beginTime) - Time.time);
+            if(remainTime < 0)//需要进行转换
             {
-                wasterNode.Process(this);
-                return true;
+                te.TimeSwitch(this);
             }
-        }
-        else if(exeNode.GetExeType() == ExeType.Select)
-        {
-            var selectNode = (SelectExeNode)exeNode;
-            if (selectNode.CanProcess(this))
-            {
-                selectNode.Process(this);
-                return true;
-            }
-        }
-        else///结束节点
-        {
-            var finishNode = (FinishExeNode)exeNode;
-            var cards = finishNode.GetCards(this);
-            foreach(var x in cards)
-            {
-                GameFrameWork.Instance.AddCardByCardData(x);
-            }
-
             return true;
         }
-
         return false;
+    }
+    /// <summary>
+    /// 当卡片切换时检测状态变化
+    /// </summary>
+    /// <returns></returns>
+    public bool CanChangeCardSwitch()
+    {
+        return exeNode.WhenCardChange(this);
+        //if (exeNode.GetExeType() == ExeType.WasterTime)
+        //{
+        //    return false;
+        //}
+        //else if (exeNode.GetExeType() == ExeType.Select)///选择节点
+        //{
+        //    return exeNode.WhenCardChange(this);
+        //}
+        //else//结束节点
+        //{
+        //    return false;
+        //}
+    }
+    /// <summary>
+    /// 点击继续的时候检测状态变化
+    /// </summary>
+    /// <returns></returns>
+    public bool CanClickSwitch()
+    {
+        if (exeNode.GetExeType() == ExeType.WasterTime)
+        {
+            return false;
+        }
+        else if (exeNode.GetExeType() == ExeType.Select)///选择节点
+        {
+            return ((SelectExeNode)exeNode).CanClickChange(this);
+        }
+        else//结束节点
+        {
+            return ((FinishExeNode)exeNode).CanClickChange(this);
+        }
+    }
+
+    /// <summary>
+    /// 进行状态切换
+    /// </summary>
+    //public bool Switch()
+    //{
+    //    if(exeNode.GetExeType() == ExeType.WasterTime)
+    //    {
+    //        var wasterNode = (WasterTimeExeNode)exeNode;
+    //        if (wasterNode.CanProcess(this))
+    //        {
+    //            wasterNode.Process(this);
+    //            return true;
+    //        }
+    //    }
+    //    else if(exeNode.GetExeType() == ExeType.Select)
+    //    {
+    //        var selectNode = (SelectExeNode)exeNode;
+    //        if (selectNode.CanProcess(this))
+    //        {
+    //            selectNode.Process(this);
+    //            return true;
+    //        }
+    //    }
+    //    else///结束节点
+    //    {
+    //        var finishNode = (FinishExeNode)exeNode;
+    //        var cards = finishNode.GetCards(this);
+    //        foreach(var x in cards)
+    //        {
+    //            GameFrameWork.Instance.AddCardByCardData(x,new Vector3(0,0,0));
+    //        }
+
+    //        return true;
+    //    }
+
+    //    return false;
+    //}
+    public void SetExeNode(ExeNode exeNode)
+    {
+        this.exeNode = exeNode;
+        beginTime = Time.time;
+    }
+    public float GetRemainTime()
+    {
+        return ((((WasterTimeExeNode)(exeNode)).GetTime() + beginTime) - Time.time);
     }
 }

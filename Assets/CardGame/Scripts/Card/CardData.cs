@@ -11,8 +11,7 @@ public abstract class CardData
     public CardData()
     {
         cardFlags = new HashSet<CardFlag>();
-        cardEnum = new CardEnum();
     }
-
+    public abstract CardEnum GetCardType();
     public abstract CardModel CreateModel();
 }

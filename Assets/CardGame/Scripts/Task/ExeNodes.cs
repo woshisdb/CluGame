@@ -31,16 +31,21 @@ public abstract class ExeNode
         this.description = description;
     }
     public abstract ExeEnum GetExeEnum();
-    
     /// <summary>
-    /// 是否可以执行
+    /// 当卡片切换的时候是否状态切换
     /// </summary>
     /// <returns></returns>
-    public abstract bool CanProcess(TaskPanelModel task);
-    /// <summary>
-    /// 执行
-    /// </summary>
-    public abstract void Process(TaskPanelModel task);
+    public abstract bool WhenCardChange(TaskPanelModel task);
+
+    ///// <summary>
+    ///// 点击或时间到的时候进行状态切换
+    ///// </summary>
+    ///// <returns></returns>
+    //public abstract bool CanProcess(TaskPanelModel task);
+    ///// <summary>
+    ///// 状态切换
+    ///// </summary>
+    //public abstract void Process(TaskPanelModel task);
 }
 
 public abstract class SelectExeNode:ExeNode
@@ -58,6 +63,7 @@ public abstract class SelectExeNode:ExeNode
     {
         return ExeType.Select;
     }
+    public abstract bool CanClickChange(TaskPanelModel task);
 }
 
 public abstract class WasterTimeExeNode:ExeNode
@@ -67,9 +73,15 @@ public abstract class WasterTimeExeNode:ExeNode
     }
     public override ExeType GetExeType()
     {
-        return ExeType.Select;
+        return ExeType.WasterTime;
     }
     public abstract float GetTime();
+    /// <summary>
+    /// 时间到了之后切换
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    public abstract bool TimeSwitch(TaskPanelModel model);
 }
 
 public abstract class FinishExeNode : ExeNode
@@ -82,5 +94,6 @@ public abstract class FinishExeNode : ExeNode
     {
         return ExeType.Finish;
     }
+    public abstract bool CanClickChange(TaskPanelModel task);
     public abstract List<CardData> GetCards(TaskPanelModel model);
 }

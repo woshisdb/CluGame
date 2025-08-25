@@ -10,6 +10,7 @@ public class Slot : MonoBehaviour
     public TextMeshPro name;
     public CardView cardView;
     public TaskPanelView taskPanelView;
+    public bool isInit;
     public bool HasCard
     {
         get { return cardView != null; }
@@ -17,18 +18,18 @@ public class Slot : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
-    public void Pos(int x,int y)
+    public void Pos(int x, int y)
     {
-        var spaceX =1.5f;
-        var spaceY =3.3f;
+        var spaceX = 1.5f;
+        var spaceY = 3.3f;
         dragMe.SetPos((new Vector3(x * spaceX, 0.5f, -y * spaceY)));
     }
     /// <summary>
@@ -37,6 +38,10 @@ public class Slot : MonoBehaviour
     /// <returns></returns>
     public bool IsCardCanPlaced(CardView cardView)
     {
+        if (cardView == null ||cardView.cardModel==null)
+        {
+            return false;
+        }
         return taskPanelView.CanAddCard(this, cardView.cardModel);
     }
     /// <summary>
@@ -45,8 +50,28 @@ public class Slot : MonoBehaviour
     /// <returns></returns>
     public void OnCardTryPlaced(CardView cardView)
     {
+        if(isInit)
+        {
+            return;
+        }
         var cardModel = cardView.GetModel() as CardModel;
         this.cardView = cardView;
+        cardView.slot = this;
+        taskPanelView.OnAddCard(this,cardModel);
+        if(taskPanelView.taskPanelModel.CanChangeCardSwitch())
+        {
+            //taskPanelView.StateTransition();
+            GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelView.taskPanelModel);
+        }
     }
-    
+    public void OnCardReleased(CardView cardView)
+    {
+        this.cardView = null;
+        taskPanelView.OnRemoveCard(this, cardView.cardModel);
+        if (taskPanelView.taskPanelModel.CanChangeCardSwitch())
+        {
+            //taskPanelView.StateTransition();
+            GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelView.taskPanelModel);
+        }
+    }
 }
