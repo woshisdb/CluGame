@@ -5,6 +5,10 @@ using UnityEngine;
 public class CardDataBase
 {
     public static Dictionary<CardEnum, CardData> cardDatabase = new Dictionary<CardEnum, CardData>() {
-        //new KeyValuePair<CardEnum, CardData>(CardEnum.e1,)
+        { CardEnum.money,new TestCardData() }
     };
+    public static CardData GetCard(CardEnum card)
+    {
+        return cardDatabase[card];
+    }
 }

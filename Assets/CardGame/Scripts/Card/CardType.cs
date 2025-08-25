@@ -7,7 +7,10 @@ using UnityEngine;
 /// </summary>
 public enum CardFlag
 {
-    c1,
+    person,///人类卡牌
+    Animal,///动物类型
+    book,//书籍
+
 }
 /// <summary>
 /// 卡牌的枚举类
@@ -18,8 +21,4 @@ public enum CardEnum
     /// 当前拥有的金币
     /// </summary>
     money,
-    /// <summary>
-    /// 当前的生命值
-    /// </summary>
-    hp,
 }
