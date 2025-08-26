@@ -50,18 +50,17 @@ public class Slot : MonoBehaviour
     /// <returns></returns>
     public void OnCardTryPlaced(CardView cardView)
     {
-        if(isInit)
-        {
-            return;
-        }
         var cardModel = cardView.GetModel() as CardModel;
         this.cardView = cardView;
         cardView.slot = this;
-        taskPanelView.OnAddCard(this,cardModel);
-        if(taskPanelView.taskPanelModel.CanChangeCardSwitch())
+        if (!isInit)
         {
-            //taskPanelView.StateTransition();
-            GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelView.taskPanelModel);
+            taskPanelView.OnAddCard(this, cardModel);
+            if (taskPanelView.taskPanelModel.CanChangeCardSwitch())
+            {
+                //taskPanelView.StateTransition();
+                GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelView.taskPanelModel);
+            }
         }
     }
     public void OnCardReleased(CardView cardView)

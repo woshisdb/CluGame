@@ -1,17 +1,17 @@
 /// <summary>
 /// 技能卡
 /// </summary>
-[InterfaceBind(CardFlag.person)]
+[InterfaceBind(CardFlag.skill)]
 public interface ISkillFlag:ICardFlag
 {
     /// <summary>
     /// 当前技能的等级
     /// </summary>
     /// <returns></returns>
-    int CardLevel();
+    int CardLevel(CardModel card);
     /// <summary>
     /// 尝试升级
     /// </summary>
     /// <returns></returns>
-    int TryUp(CardModel card);
+    void TryUp(CardModel card);
 }

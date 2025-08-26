@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using Studio.OverOne.DragMe.Components;
 using UnityEngine;
 
@@ -12,6 +13,14 @@ public class CardsManager
     public CardsManager()
     {
         cardmodels = new List<CardModel>();
+    }
+    /// <summary>
+    /// 创建卡牌
+    /// </summary>
+    [Button]
+    public void CreateCard(CardData card)
+    {
+        cardmodels.Add( card.CreateModel() );
     }
     /// <summary>
     /// 刷新每一帧的行为

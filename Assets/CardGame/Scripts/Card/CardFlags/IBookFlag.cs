@@ -1,7 +1,7 @@
 /// <summary>
 /// 书籍的Flag
 /// </summary>
-[InterfaceBind(CardFlag.person)]
+[InterfaceBind(CardFlag.book)]
 public interface IBookFlag:IGoodsCardFlag
 {
     bool CanRead(CardModel card);

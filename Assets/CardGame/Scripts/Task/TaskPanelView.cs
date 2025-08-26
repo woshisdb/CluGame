@@ -81,6 +81,7 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
                     var card = GameFrameWork.Instance.AddCardByCardModel(taskPanelModel.cardsMap[x],new Vector3(0,0,0));
                     var dragMe = card.GetComponent<DragMe>();
                     obj.GetComponent<DragMe>().TryPlace(new Vector3(0,0,0),dragMe);
+                    //obj.GetComponent<Slot>().OnCardTryPlaced(card.GetComponent<CardView>());
                 }
                 obj.GetComponent<Slot>().isInit = false;
             }

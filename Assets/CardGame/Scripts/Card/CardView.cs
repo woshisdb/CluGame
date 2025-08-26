@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using Studio.OverOne.DragMe.Components;
 using Studio.OverOne.DragMe.Data.Abstractions;
 using Studio.OverOne.DragMe.Events;
 using TMPro;
@@ -72,6 +73,10 @@ public class CardView : SerializedMonoBehaviour,IView
     /// <returns></returns>
     public void PlaceToTable()
     {
-        
+    }
+    public void OnDestroy()
+    {
+        GameFrameWork.Instance.viewModelManager.ReleaseView(this);
+        Debug.Log("OnDestroy");
     }
 }

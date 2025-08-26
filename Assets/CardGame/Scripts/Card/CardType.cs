@@ -29,4 +29,5 @@ public enum CardEnum
     /// 当前拥有的金币
     /// </summary>
     money,
+    mathbook,
 }

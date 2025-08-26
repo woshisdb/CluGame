@@ -146,8 +146,11 @@ public class TaskPanelModel:IModel
             {
                 foreach (var val in cardViews)
                 {
-                    ((CardView)val).PlaceToTable();
+                    ((CardView)val).onGrab();
+                    GameObject.Destroy(((CardView)val).gameObject);
                 }
+                GameFrameWork.Instance.viewModelManager.ReleaseModel(card);
+                GameFrameWork.Instance.AddCardByCardModel(card, new Vector3(0, 0, 0));
             }
         }
     }
