@@ -20,6 +20,10 @@ public abstract class CardRequire
     }
 
     public abstract bool Require(CardModel card);
+    public virtual bool Satify(TaskPanelModel task)
+    {
+        return task.TryFindCard(this) != null;
+    }
 }
 /// <summary>
 /// 执行的枚举

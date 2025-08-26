@@ -7,7 +7,7 @@ public class MoneyCardData : CardData,IMoneyFlag
     {
         title = "money";
         description = "money";
-        InitCardFlags(typeof(IMoneyFlag))
+        InitCardFlags(typeof(IMoneyFlag));
     }
     public override CardModel CreateModel()
     {

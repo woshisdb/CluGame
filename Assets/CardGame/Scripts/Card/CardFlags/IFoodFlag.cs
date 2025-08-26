@@ -4,6 +4,6 @@
 [InterfaceBind(CardFlag.person)]
 public interface IFoodFlag:IGoodsCardFlag
 {
-    bool CanEat(CardModel card)
-    void Eat(CardModel card)
+    bool CanEat(CardModel card);
+    void Eat(CardModel card);
 }

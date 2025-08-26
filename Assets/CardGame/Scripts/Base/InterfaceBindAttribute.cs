@@ -1,3 +1,4 @@
+using System;
 /// <summary>
 /// 用于把接口绑定到枚举的 Attribute
 /// </summary>

@@ -52,14 +52,14 @@ public abstract class CardData
 
     public bool hasFlag(CardFlag cardFlag)
     {
-        return cardFlag.ContainKey(cardFlag);
+        return cardFlags.Contains(cardFlag);
     }
 
-    public void InitCardFlags(params Type types[])
+    public void InitCardFlags(params Type[] types)
     {
         foreach (var t in types)
         {
-            var enums = InterfaceHelper.GetBindEnums<ServiceType>(t);
+            var enums = InterfaceHelper.GetBindEnums<CardFlag>(t);
             cardFlags.UnionWith(enums);
         }
     }

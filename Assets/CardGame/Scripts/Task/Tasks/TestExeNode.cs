@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Test_CardRequire : CardRequire
+public class Test_ExeCardRequire : CardRequire
 {
-    public Test_CardRequire() : base("测试")
+    public Test_ExeCardRequire() : base("测试")
     {
     }
 
@@ -21,8 +21,8 @@ public class Test_SelectExeNode : SelectExeNode
     {
         cardRequires = new List<CardRequire>()
         {
-            new Test_CardRequire(),
-            new Test_CardRequire()
+            new Test_ExeCardRequire(),
+            new Test_ExeCardRequire()
         };
     }
 

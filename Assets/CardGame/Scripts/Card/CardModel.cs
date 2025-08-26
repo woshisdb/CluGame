@@ -19,7 +19,7 @@ public class CardModel:IModel
     }
     public bool hasFlag(CardFlag cardFlag)
     {
-        return cardFlag.cardData.ContainKey(cardFlag);
+        return cardData.hasFlag(cardFlag);
     }
     public CardModel(CardData cardData)
     {

@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Test_CardRequire : CardRequire
+public class ResearchCardRequire : CardRequire
 {
-    public Test_CardRequire() : base("测试")
+    public ResearchCardRequire() : base("研究")
     {
     }
 
@@ -13,6 +13,7 @@ public class Test_CardRequire : CardRequire
     {
         return true;
     }
+
 }
 [Serializable]
 public class ResearchSelectExeNode : SelectExeNode

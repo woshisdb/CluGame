@@ -4,6 +4,6 @@
 [InterfaceBind(CardFlag.person)]
 public interface IPlacementFlag:ICardFlag
 {
-    bool CanEnter(CardModel card)
-    bool Enter(CardModel card)
+    bool CanEnter(CardModel card);
+    bool Enter(CardModel card);
 }

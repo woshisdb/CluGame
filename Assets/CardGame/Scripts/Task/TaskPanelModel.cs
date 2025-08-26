@@ -53,7 +53,7 @@ public class TaskPanelModel:IModel
     }
 	public CardModel TryFindCard(CardRequire cardRequire)
 	{
-        if (!cardsMap.ContainKey(cardRequire))
+        if (!cardsMap.ContainsKey(cardRequire))
         {
             return null;
         }
@@ -141,7 +141,7 @@ public class TaskPanelModel:IModel
         var card = TryFindCard(cardRequire);
         if (card!=null)
         {
-            var cardViews = GameFrameWork.Instance.ViewModelManager.FindViews(card);
+            var cardViews = GameFrameWork.Instance.viewModelManager.FindViews(card);
             if (cardViews!=null)
             {
                 foreach (var val in cardViews)

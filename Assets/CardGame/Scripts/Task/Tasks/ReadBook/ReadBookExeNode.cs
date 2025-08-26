@@ -10,7 +10,7 @@ public class BookCardRequire : CardRequire
     }
     public override bool Require(CardModel card)
     {
-        return card.hasFlag(CardFlag.book)//是否是书籍
+        return card.hasFlag(CardFlag.book);//是否是书籍
     }
 }
 [Serializable]
@@ -28,7 +28,7 @@ public class ReadBookSelectExeNode : SelectExeNode
         this.BookRequire = new BookCardRequire();
         cardRequires = new List<CardRequire>()
         {
-            SkillRequire，//技能卡
+            SkillRequire,//技能卡
             this.BookRequire//书籍卡
         };
     }
@@ -53,7 +53,7 @@ public class ReadBookSelectExeNode : SelectExeNode
         if (task.TryFindCard(SkillRequire)==null)//没有技能卡就改变
         {
             task.TryReleaseCard(BookRequire);//释放书籍卡
-            task.SetExeNode(new ResearchExeNode());//转为研究任务
+            task.SetExeNode(new ResearchSelectExeNode());//转为研究任务
             return true;
         }
         else//还有技能卡就不变

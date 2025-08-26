@@ -35,7 +35,7 @@ public class ViewModelManager
 
     public List<IView> FindViews(IModel model)
     {
-        if (!mapper.ContainKey(model))
+        if (!mapper.ContainsKey(model))
         {
             return null;
         }

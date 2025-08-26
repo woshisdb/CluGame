@@ -8,10 +8,10 @@ public interface ISkillFlag:ICardFlag
     /// 当前技能的等级
     /// </summary>
     /// <returns></returns>
-    int CardLevel()
+    int CardLevel();
     /// <summary>
     /// 尝试升级
     /// </summary>
     /// <returns></returns>
-    int TryUp(CardModel card)
+    int TryUp(CardModel card);
 }
