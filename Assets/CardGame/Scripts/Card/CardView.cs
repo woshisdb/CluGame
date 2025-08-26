@@ -66,4 +66,12 @@ public class CardView : SerializedMonoBehaviour,IView
         var placement = placedEvent.PlacementComponent;
         placement.GetComponent<Slot>().OnCardTryPlaced(this);
     }
+    /// <summary>
+    /// 卡片放置在Table上
+    /// </summary>
+    /// <returns></returns>
+    public void PlaceToTable()
+    {
+        
+    }
 }

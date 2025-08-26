@@ -138,7 +138,6 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
         var cardRequire = slotMap[slot];
         taskPanelModel.RemoveCard(cardRequire);
     }
-
     public void Release()
     {
     }

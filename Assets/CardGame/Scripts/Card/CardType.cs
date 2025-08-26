@@ -10,7 +10,15 @@ public enum CardFlag
     person,///人类卡牌
     Animal,///动物类型
     book,//书籍
-
+    food,
+    goods,
+    ill,
+    knowledge,
+    message,
+    money,
+    placement,
+    skill,
+    state,
 }
 /// <summary>
 /// 卡牌的枚举类

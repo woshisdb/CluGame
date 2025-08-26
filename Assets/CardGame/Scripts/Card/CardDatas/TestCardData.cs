@@ -18,6 +18,6 @@ public class TestCardModel : CardModel
 {
     public TestCardModel(CardData cardData) : base(cardData)
     {
-
+        
     }
 }

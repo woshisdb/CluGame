@@ -32,7 +32,15 @@ public class ViewModelManager
         }
         mapper[model].Add(view);
     }
-    
+
+    public List<IView> FindViews(IModel model)
+    {
+        if (!mapper.ContainKey(model))
+        {
+            return null;
+        }
+        return mapper[model];
+    }
     public void ReleaseView(IView view)
     {
         var model = view.GetModel();

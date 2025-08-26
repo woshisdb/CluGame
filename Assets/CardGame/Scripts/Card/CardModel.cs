@@ -17,7 +17,10 @@ public class CardModel:IModel
         var cardView = obj.GetComponent<CardView>();
         return cardView;
     }
-
+    public bool hasFlag(CardFlag cardFlag)
+    {
+        return cardFlag.cardData.ContainKey(cardFlag);
+    }
     public CardModel(CardData cardData)
     {
         this.cardData = cardData;

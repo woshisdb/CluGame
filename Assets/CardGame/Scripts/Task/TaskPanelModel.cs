@@ -51,6 +51,17 @@ public class TaskPanelModel:IModel
     {
         cardsMap.Remove(cardRequire);
     }
+	public CardModel TryFindCard(CardRequire cardRequire)
+	{
+        if (!cardsMap.ContainKey(cardRequire))
+        {
+            return null;
+        }
+        else
+        {
+            return cardsMap[cardRequire];
+        }
+	}
     public float BeginTime()
     {
         return 1;
@@ -116,44 +127,6 @@ public class TaskPanelModel:IModel
             return ((FinishExeNode)exeNode).CanClickChange(this);
         }
     }
-
-    /// <summary>
-    /// 进行状态切换
-    /// </summary>
-    //public bool Switch()
-    //{
-    //    if(exeNode.GetExeType() == ExeType.WasterTime)
-    //    {
-    //        var wasterNode = (WasterTimeExeNode)exeNode;
-    //        if (wasterNode.CanProcess(this))
-    //        {
-    //            wasterNode.Process(this);
-    //            return true;
-    //        }
-    //    }
-    //    else if(exeNode.GetExeType() == ExeType.Select)
-    //    {
-    //        var selectNode = (SelectExeNode)exeNode;
-    //        if (selectNode.CanProcess(this))
-    //        {
-    //            selectNode.Process(this);
-    //            return true;
-    //        }
-    //    }
-    //    else///结束节点
-    //    {
-    //        var finishNode = (FinishExeNode)exeNode;
-    //        var cards = finishNode.GetCards(this);
-    //        foreach(var x in cards)
-    //        {
-    //            GameFrameWork.Instance.AddCardByCardData(x,new Vector3(0,0,0));
-    //        }
-
-    //        return true;
-    //    }
-
-    //    return false;
-    //}
     public void SetExeNode(ExeNode exeNode)
     {
         this.exeNode = exeNode;
@@ -162,5 +135,20 @@ public class TaskPanelModel:IModel
     public float GetRemainTime()
     {
         return ((((WasterTimeExeNode)(exeNode)).GetTime() + beginTime) - Time.time);
+    }
+    public void TryReleaseCard(CardRequire cardRequire)
+    {
+        var card = TryFindCard(cardRequire);
+        if (card!=null)
+        {
+            var cardViews = GameFrameWork.Instance.ViewModelManager.FindViews(card);
+            if (cardViews!=null)
+            {
+                foreach (var val in cardViews)
+                {
+                    ((CardView)val).PlaceToTable();
+                }
+            }
+        }
     }
 }
