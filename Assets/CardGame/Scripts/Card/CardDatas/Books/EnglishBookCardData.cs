@@ -1,4 +1,4 @@
-public class EnglishBookCardData
+public class EnglishBookCardData : BookCardData
 {
     
 }

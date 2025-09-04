@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// 可拖拽卡牌核心类
@@ -22,17 +23,17 @@ public class DraggableCard : MonoBehaviour
     /// <summary>
     /// 双击事件（仅在快速点击两次且无拖拽时触发）
     /// </summary>
-    public event System.EventHandler<CardDragEventArgs> OnCardClicked;
+    public UnityEvent<CardDragEventArgs> OnCardClicked;
     
     /// <summary>
     /// 首次触摸事件（鼠标按下时立即触发）
     /// </summary>
-    public event System.EventHandler<CardDragEventArgs> OnCardTouch;
+    public UnityEvent<CardDragEventArgs> OnCardTouch;
     
     /// <summary>
     /// 拖拽移动事件（拖拽过程中持续触发）
     /// </summary>
-    public event System.EventHandler<CardDragEventArgs> OnCardMove;
+    public UnityEvent<CardDragEventArgs> OnCardMove;
     
     /// <summary>
     /// 放置完成事件（拖拽结束并放置时触发）
@@ -73,7 +74,7 @@ public class DraggableCard : MonoBehaviour
             {
                 // 触发双击事件
                 var clickArgs = new CardDragEventArgs(this, Input.mousePosition, transform.position);
-                OnCardClicked?.Invoke(this, clickArgs);
+                OnCardClicked?.Invoke(clickArgs);
                 isDoubleClickProcessed = true;
                 clickCount = 0; // 重置点击计数
             }
@@ -85,7 +86,7 @@ public class DraggableCard : MonoBehaviour
         }
         else
         {
-            OnCardTouch?.Invoke(this, touchArgs);
+            OnCardTouch?.Invoke(touchArgs);
         }
 
         lastClickTime = Time.time;
@@ -117,7 +118,7 @@ public class DraggableCard : MonoBehaviour
                 
                 // 触发移动事件
                 var moveArgs = new CardDragEventArgs(this, Input.mousePosition, newPos);
-                OnCardMove?.Invoke(this, moveArgs);
+                OnCardMove?.Invoke(moveArgs);
             }
         }
     }

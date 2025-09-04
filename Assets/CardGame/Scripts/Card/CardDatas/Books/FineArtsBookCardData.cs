@@ -1,7 +1,7 @@
 /// <summary>
 /// 美术书籍
 /// </summary>
-public class FineArtsBookCardData
+public class FineArtsBookCardData : BookCardData
 {
         
 }
