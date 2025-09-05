@@ -19,6 +19,7 @@ public class CardView : SerializedMonoBehaviour,IView
     public void BindModel(IModel model)
     {
         this.cardModel = (CardModel)model;
+        OnCreateView(this);
         Refresh();
     }
 
@@ -43,11 +44,6 @@ public class CardView : SerializedMonoBehaviour,IView
             this.countDown.text = "倒计时";
         }
     }
-    public void Release()
-    {
-        Debug.Log("shuissssss");
-    }
-
     // Start is called before the first frame update
     void Start()
     {
@@ -76,7 +72,7 @@ public class CardView : SerializedMonoBehaviour,IView
     }
     public void OnDestroy()
     {
-        GameFrameWork.Instance.viewModelManager.ReleaseView(this);
+        OnDestoryView();
         Debug.Log("OnDestroy");
     }
 }

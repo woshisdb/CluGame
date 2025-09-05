@@ -37,7 +37,7 @@ public class GameFrameWork : SerializedMonoBehaviour
         var cv = obj.GetComponent<CardView>();
         cv.BindModel(cardModel);
         obj.transform.GetComponent<DragMe>().SetOriginPos(pos);
-        viewModelManager.Bind(cardModel, cv);
+        // viewModelManager.Bind(cardModel, cv);
         return obj;
     }
     public GameObject AddTaskByData(TaskPanelModel model,Vector3 pos)
@@ -47,7 +47,7 @@ public class GameFrameWork : SerializedMonoBehaviour
         var cv = obj.GetComponent<TaskView>();
         cv.BindModel(model);
         obj.transform.GetComponent<DragMe>().SetOriginPos(pos);
-        viewModelManager.Bind(model, cv);
+        // viewModelManager.Bind(model, cv);
         return obj;
     }
 

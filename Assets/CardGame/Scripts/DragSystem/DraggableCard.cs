@@ -23,22 +23,22 @@ public class DraggableCard : MonoBehaviour
     /// <summary>
     /// 双击事件（仅在快速点击两次且无拖拽时触发）
     /// </summary>
-    public UnityEvent<CardDragEventArgs> OnCardClicked;
+    public CardDragUnityEvent OnCardClicked;
     
     /// <summary>
     /// 首次触摸事件（鼠标按下时立即触发）
     /// </summary>
-    public UnityEvent<CardDragEventArgs> OnCardTouch;
+    public CardDragUnityEvent OnCardTouch;
     
     /// <summary>
     /// 拖拽移动事件（拖拽过程中持续触发）
     /// </summary>
-    public UnityEvent<CardDragEventArgs> OnCardMove;
+    public CardDragUnityEvent OnCardMove;
     
     /// <summary>
     /// 放置完成事件（拖拽结束并放置时触发）
     /// </summary>
-    public event System.EventHandler<CardDragEventArgs> OnCardPlaced;
+    public CardDragUnityEvent OnCardPlaced;
 
     // 内部状态变量
     private Vector3 originalPosition;
@@ -52,7 +52,6 @@ public class DraggableCard : MonoBehaviour
     {
         if (mainCamera == null)
             mainCamera = Camera.main;
-            
         originalPosition = transform.position;
         originalRotation = transform.rotation;
     }

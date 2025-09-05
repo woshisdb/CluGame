@@ -1,40 +1,40 @@
 using UnityEngine;
+
 /// <summary>
-/// ¿¨Æ¬ÍÏ×§ÊÂ¼ş²ÎÊıÀà£¬À©Õ¹Ö§³ÖÄ¿±ê²å²ÛĞÅÏ¢
+/// å¡ç‰Œæ‹–æ‹½äº‹ä»¶å‚æ•°
 /// </summary>
 public class CardDragEventArgs : System.EventArgs
 {
     /// <summary>
-    /// ´¥·¢ÊÂ¼şµÄ¿¨Æ¬ÊµÀı
+    /// è§¦å‘äº‹ä»¶çš„å¡ç‰Œ
     /// </summary>
     public DraggableCard Card { get; }
-
+    
     /// <summary>
-    /// ÊÂ¼ş·¢ÉúÊ±Êó±êµÄÆÁÄ»×ø±ê£¨ÏñËØ£©
-    /// </summary>
-    public Vector3 MousePosition { get; }
-
-    /// <summary>
-    /// ÊÂ¼ş·¢ÉúÊ±¿¨Æ¬µÄÊÀ½ç×ø±êÎ»ÖÃ
-    /// </summary>
-    public Vector3 CardPosition { get; }
-
-    /// <summary>
-    /// ¿¨Æ¬·ÅÖÃµÄÄ¿±ê²å²Û£¨¿ÉÑ¡£¬½öÔÚ·ÅÖÃÊÂ¼şÖĞÓĞĞ§£©
+    /// ç›®æ ‡æ’æ§½ï¼ˆä»…åœ¨æ”¾ç½®äº‹ä»¶ä¸­æœ‰æ•ˆï¼‰
     /// </summary>
     public CardSlot TargetSlot { get; set; }
-
+    
     /// <summary>
-    /// ¹¹Ôìº¯Êı£¬³õÊ¼»¯ÊÂ¼ş²ÎÊı
+    /// å½“å‰é¼ æ ‡ä½ç½®ï¼ˆå±å¹•åæ ‡ï¼‰
     /// </summary>
-    /// <param name="card">´¥·¢ÊÂ¼şµÄ¿¨Æ¬</param>
-    /// <param name="mousePos">Êó±êÆÁÄ»×ø±ê</param>
-    /// <param name="cardPos">¿¨Æ¬ÊÀ½ç×ø±ê</param>
-    public CardDragEventArgs(DraggableCard card, Vector3 mousePos, Vector3 cardPos)
+    public Vector2 MousePosition { get; }
+    
+    /// <summary>
+    /// å¡ç‰Œå½“å‰ä¸–ç•Œä½ç½®
+    /// </summary>
+    public Vector3 WorldPosition { get; }
+
+    public CardDragEventArgs(DraggableCard card, Vector2 mousePos, Vector3 worldPos)
     {
         Card = card;
         MousePosition = mousePos;
-        CardPosition = cardPos;
-        TargetSlot = null; // Ä¬ÈÏÎª¿Õ£¬ĞèÒªÊ±ÔÚÊÂ¼ş´¥·¢Ç°ÉèÖÃ
+        WorldPosition = worldPos;
     }
 }
+
+/// <summary>
+/// å¡ç‰‡æ‹–æ‹½Unityäº‹ä»¶ï¼ˆæ”¯æŒåœ¨Inspectoré…ç½®ï¼‰
+/// </summary>
+[System.Serializable]
+public class CardDragUnityEvent : UnityEvent<CardDragEventArgs> { }
