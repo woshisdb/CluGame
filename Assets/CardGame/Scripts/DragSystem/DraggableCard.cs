@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 // 简化事件定义：统一使用单一事件类型（无需为每个事件单独定义密封类，减少冗余）
-[System.Serializable]
-public class CardDragUnityEvent : UnityEvent<CardDragEventArgs> { }
+//[System.Serializable]
+//public class CardDragUnityEvent : UnityEvent<CardDragEventArgs> { }
 
 /// <summary>
 /// 可拖拽卡牌核心类（仅保留单击、拖拽功能，无双击逻辑）

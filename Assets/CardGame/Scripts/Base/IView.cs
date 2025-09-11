@@ -32,7 +32,8 @@ public static class IViewExtensions
 
 public interface IView
 {
-    void bindModel(IModel model);
+    void BindModel(IModel model);
     IModel GetModel();
     void Refresh();
+    void Release();
 }

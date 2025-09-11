@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public enum SceneFactionEnum
@@ -51,5 +52,20 @@ public class Faction
     /// 结社的成员
     /// </summary>
     public List<NpcCardModel> Cards;
+}
 
+public class FactionManager
+{
+    public Dictionary<string,Faction> Factions;
+    [Button]
+    public void AddFaction(string name)
+    {
+        Faction faction = new Faction();
+        faction.Name = name;
+        Factions.Add(name,faction);
+    }
+    public Faction GetFaction(string name)
+    {
+        return Factions[name];
+    }
 }

@@ -22,8 +22,14 @@ public abstract class SceneCardData : CardData
 
 public class SceneCardModel : CardModel
 {
+    public static string Faction = "结社";
     public SceneCardModel(CardData cardData) : base(cardData)
     {
         // 模型初始化逻辑
+        SetDataByKey(Faction, new FactionManager());
+    }
+    public FactionManager GetFactionMgr()
+    {
+        return GetObjectByKey<FactionManager>(Faction);
     }
 }

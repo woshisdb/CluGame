@@ -19,7 +19,6 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     public void BindModel(IModel model)
     {
         this.cardModel = (CardModel)model;
-        OnCreateView(this);
         Refresh();
         this.onBindView();
     }
@@ -93,5 +92,10 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
             new KVItemBinder(()=>{return "ee1"; },()=>{return "ee2"; }),
             new ButtonBinder(()=>{return "t1"; },()=>{})
         };
+    }
+
+    public void Release()
+    {
+
     }
 }
