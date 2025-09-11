@@ -6,8 +6,13 @@ using UnityEngine;
 
 public class GameFrameWork : SerializedMonoBehaviour
 {
+    public static GameFrameWork instance;
     public static GameFrameWork Instance { get {
-            return GameObject.Find("GameFrameWork").GetComponent<GameFrameWork>();
+            if (instance == null)
+            {
+                instance = GameObject.Find("GameFrameWork").GetComponent<GameFrameWork>();
+            }
+            return instance;
     } }
     public GameConfig gameConfig;
     public GameObject taskPanel;
@@ -18,15 +23,20 @@ public class GameFrameWork : SerializedMonoBehaviour
 
     public ViewModelManager viewModelManager;
 
+
     void Awake()
     {
         cardsManager.Init();
         taskManager.Init();
         viewModelManager.Init();
     }
+    public void AddCardByEnum(CardEnum cardEnum,Vector3 pos)
+    {
+        AddCardByCardData(gameConfig.CardMap[cardEnum],pos);
+    }
     public void AddCardByCardData(CardData cardData, Vector3 pos)
     {
-        var cardTemplate = gameConfig.viewDic[cardData.viewType];
+        //var cardTemplate = gameConfig.viewDic[cardData.viewType];
         AddCardByCardModel(cardData.CreateModel(),pos);
     }
 
@@ -36,8 +46,7 @@ public class GameFrameWork : SerializedMonoBehaviour
         var obj = GameObject.Instantiate(cardTemplate);
         var cv = obj.GetComponent<CardView>();
         cv.BindModel(cardModel);
-        obj.transform.GetComponent<DragMe>().SetOriginPos(pos);
-        viewModelManager.Bind(cardModel, cv);
+        obj.transform.GetComponent<DraggableCard>().transform.localPosition = (pos);
         return obj;
     }
     public GameObject AddTaskByData(TaskPanelModel model,Vector3 pos)
@@ -46,8 +55,8 @@ public class GameFrameWork : SerializedMonoBehaviour
         var obj = GameObject.Instantiate(taskTemplate);
         var cv = obj.GetComponent<TaskView>();
         cv.BindModel(model);
-        obj.transform.GetComponent<DragMe>().SetOriginPos(pos);
-        viewModelManager.Bind(model, cv);
+        obj.transform.localPosition = (pos);
+        //viewModelManager.Bind(model, cv);
         return obj;
     }
 

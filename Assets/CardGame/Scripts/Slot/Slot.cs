@@ -1,12 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Studio.OverOne.DragMe.Components;
 using TMPro;
 using UnityEngine;
 
 public class Slot : MonoBehaviour
 {
-    public DragMe dragMe;
     public TextMeshPro name;
     public CardView cardView;
     public TaskPanelView taskPanelView;
@@ -30,7 +28,7 @@ public class Slot : MonoBehaviour
     {
         var spaceX = 1.5f;
         var spaceY = 3.3f;
-        dragMe.SetPos((new Vector3(x * spaceX, 0.5f, -y * spaceY)));
+        transform.localPosition = new Vector3(x * spaceX, 0.5f, -y * spaceY);
     }
     /// <summary>
     /// 卡片是否可以放置
@@ -44,21 +42,31 @@ public class Slot : MonoBehaviour
         }
         return taskPanelView.CanAddCard(this, cardView.cardModel);
     }
+    public void CardPlaceCheck(CardPlaceCheckArgs arg)
+    {
+        var c = arg.Card.GetComponent<CardView>();
+        if (c!=null)
+        {
+            var res = IsCardCanPlaced(c);
+            arg.IsAllowPlace = res;
+        }
+    }
     /// <summary>
     /// 卡片尝试放置
     /// </summary>
     /// <returns></returns>
-    public void OnCardTryPlaced(CardView cardView)
+    public void OnCardTryPlaced(OnCardPlaceArgs cardViewArgs)
     {
+        var cardView = cardViewArgs.Card;
         var cardModel = cardView.GetModel() as CardModel;
         this.cardView = cardView;
         cardView.slot = this;
+        cardView.transform.parent = this.transform;
         if (!isInit)
         {
             taskPanelView.OnAddCard(this, cardModel);
             if (taskPanelView.taskPanelModel.CanChangeCardSwitch())
             {
-                //taskPanelView.StateTransition();
                 GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelView.taskPanelModel);
             }
         }

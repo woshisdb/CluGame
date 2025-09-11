@@ -18,6 +18,14 @@ public class CardsManager
     /// 创建卡牌
     /// </summary>
     [Button]
+    public void CreateCard(CardEnum card)
+    {
+        cardmodels.Add(GameFrameWork.Instance.gameConfig.CardMap[card].CreateModel());
+    }
+    /// <summary>
+    /// 创建卡牌
+    /// </summary>
+    [Button]
     public void CreateCard(CardData card)
     {
         cardmodels.Add( card.CreateModel() );

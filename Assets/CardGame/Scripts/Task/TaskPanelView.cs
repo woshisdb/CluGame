@@ -40,7 +40,11 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
             return;
         }
     }
-
+    public void OnTaskPanelPut()
+    {
+        Debug.Log("OnTaskPanelPut");
+        this.transform.localPosition = new Vector3(this.transform.position.x,-9.5f, this.transform.position.z);
+    }
     public IModel GetModel()
     {
         return taskPanelModel;
@@ -60,6 +64,9 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
             timeRemain.gameObject.SetActive(false);
             foreach (var x in slotMap)
             {
+                var hasCard = x.Key.HasCard;
+                if(hasCard)
+                GameObject.Destroy(x.Key.cardView.gameObject);
                 GameObject.Destroy(x.Key.gameObject);
             }
 
@@ -79,9 +86,11 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
                 if (taskPanelModel.cardsMap.ContainsKey(x))//包含这个卡的内容
                 {
                     var card = GameFrameWork.Instance.AddCardByCardModel(taskPanelModel.cardsMap[x],new Vector3(0,0,0));
-                    var dragMe = card.GetComponent<DragMe>();
-                    obj.GetComponent<DragMe>().TryPlace(new Vector3(0,0,0),dragMe);
-                    //obj.GetComponent<Slot>().OnCardTryPlaced(card.GetComponent<CardView>());
+                    //obj.GetComponent<Slot>().OnCardTryPlaced(new OnCardPlaceArgs
+                    //{
+                    //    Card = card.GetComponent<CardView>()
+                    //}) ;
+                    obj.GetComponent<CardSlot>().TryPlaceCard(card.GetComponent<DraggableCard>());
                 }
                 obj.GetComponent<Slot>().isInit = false;
             }

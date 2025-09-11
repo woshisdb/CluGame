@@ -1,8 +1,13 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
+// 简化事件定义：统一使用单一事件类型（无需为每个事件单独定义密封类，减少冗余）
+[System.Serializable]
+public class CardDragUnityEvent : UnityEvent<CardDragEventArgs> { }
+
 /// <summary>
-/// 可拖拽卡牌核心类
+/// 可拖拽卡牌核心类（仅保留单击、拖拽功能，无双击逻辑）
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class DraggableCard : MonoBehaviour
@@ -10,8 +15,6 @@ public class DraggableCard : MonoBehaviour
     [Header("交互配置")]
     [Tooltip("区分点击和拖拽的像素阈值")]
     public float clickThreshold = 5f;
-    [Tooltip("双击检测的时间间隔（秒）")]
-    public float doubleClickTime = 0.3f;
     [Tooltip("引用主相机（默认自动获取）")]
     public Camera mainCamera;
 
@@ -21,102 +24,84 @@ public class DraggableCard : MonoBehaviour
 
     // 事件定义
     /// <summary>
-    /// 双击事件（仅在快速点击两次且无拖拽时触发）
+    /// 单击事件（非拖拽状态下抬起鼠标时触发）
     /// </summary>
-    public UnityEvent<CardDragEventArgs> OnCardClicked;
-    
+    public CardDragUnityEvent OnCardClicked;
+    public void Click(CardDragEventArgs cardDragEventArgs)
+    {
+        Debug.Log("Click");
+    }
     /// <summary>
     /// 首次触摸事件（鼠标按下时立即触发）
     /// </summary>
-    public UnityEvent<CardDragEventArgs> OnCardTouch;
-    
+    public CardDragUnityEvent OnCardTouch;
+    public void Touch(CardDragEventArgs cardDragEventArgs)
+    {
+        Debug.Log("Touch");
+    }
+
     /// <summary>
     /// 拖拽移动事件（拖拽过程中持续触发）
     /// </summary>
-    public UnityEvent<CardDragEventArgs> OnCardMove;
-    
+    public CardDragUnityEvent OnCardMove;
+    public void Move(CardDragEventArgs cardDragEventArgs)
+    {
+        Debug.Log("Move");
+    }
+
     /// <summary>
     /// 放置完成事件（拖拽结束并放置时触发）
     /// </summary>
-    public event System.EventHandler<CardDragEventArgs> OnCardPlaced;
+    public CardDragUnityEvent OnCardPlaced;
+    public void Placed(CardDragEventArgs cardDragEventArgs)
+    {
+        Debug.Log("Placed");
+    }
 
-    // 内部状态变量
+    // 内部状态变量（删除双击相关的 clickCount/lastClickTime/isDoubleClickProcessed）
     private Vector3 originalPosition;
     private Quaternion originalRotation;
     private Vector2 firstTouchPos;
-    private float lastClickTime;
-    private int clickCount;
-    private bool isDoubleClickProcessed;
 
     private void Start()
     {
         if (mainCamera == null)
             mainCamera = Camera.main;
-            
         originalPosition = transform.position;
         originalRotation = transform.rotation;
     }
 
     private void OnMouseDown()
     {
+        transform.parent = null;
         isTouching = true;
         firstTouchPos = Input.mousePosition;
-        clickCount++;
-
+        GetComponent<Rigidbody>().isKinematic = false;
         // 触发首次触摸事件
         var touchArgs = new CardDragEventArgs(this, Input.mousePosition, transform.position);
-
-        // 双击检测逻辑
-        if (clickCount >= 2)
-        {
-            float timeSinceLastClick = Time.time - lastClickTime;
-            if (timeSinceLastClick <= doubleClickTime && !isDragging)
-            {
-                // 触发双击事件
-                var clickArgs = new CardDragEventArgs(this, Input.mousePosition, transform.position);
-                OnCardClicked?.Invoke(clickArgs);
-                isDoubleClickProcessed = true;
-                clickCount = 0; // 重置点击计数
-            }
-            else
-            {
-                // 超过双击时间阈值，重置为单次点击
-                clickCount = 1;
-            }
-        }
-        else
-        {
-            OnCardTouch?.Invoke(touchArgs);
-        }
-
-        lastClickTime = Time.time;
+        OnCardTouch?.Invoke(touchArgs);
     }
 
     private void OnMouseDrag()
     {
-        // 计算鼠标移动距离
+        // 计算鼠标移动距离，超过阈值判定为拖拽
         float moveDistance = Vector2.Distance(Input.mousePosition, firstTouchPos);
-        
-        // 超过阈值则判定为拖拽
         if (moveDistance > clickThreshold && !isDragging)
         {
             isDragging = true;
-            clickCount = 0; // 拖拽状态下重置点击计数
         }
 
-        // 拖拽中触发移动事件
+        // 拖拽中更新位置并触发移动事件
         if (isDragging)
         {
-            // 计算世界空间位置（基于卡片初始高度的平面）
             Plane dragPlane = new Plane(Vector3.up, originalPosition.y);
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            
+
             if (dragPlane.Raycast(ray, out float distance))
             {
                 Vector3 newPos = ray.GetPoint(distance);
-                transform.position = newPos;
-                
-                // 触发移动事件
+                transform.position = newPos+new Vector3(0,1,0);
+
                 var moveArgs = new CardDragEventArgs(this, Input.mousePosition, newPos);
                 OnCardMove?.Invoke(moveArgs);
             }
@@ -127,42 +112,42 @@ public class DraggableCard : MonoBehaviour
     {
         if (isDragging)
         {
-            // 拖拽结束，检测是否放置到插槽
-            CardSlot targetSlot = null;
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            // 关键：设置QueryTriggerInteraction.Collide以检测触发器
+            RaycastHit[] hits = Physics.RaycastAll(
+                ray
+            );
+            bool hasSat = false;
+            for (int i = 0; i < hits.Length; i++)//检测所有的
             {
-                targetSlot = hit.collider.GetComponent<CardSlot>();
+                // 拖拽结束：检测目标插槽并触发放置事件
+                CardSlot targetSlot = null;
+                targetSlot = hits[i].collider.GetComponent<CardSlot>();
+                if(targetSlot)
+                {
+                    var placeArgs = new CardDragEventArgs(this, Input.mousePosition, transform.position)
+                    {
+                        TargetSlot = targetSlot
+                    };
+                    hasSat = true;
+                    OnCardPlaced?.Invoke(placeArgs);
+                    break;
+                }
             }
-
-            // 触发放置事件
-            var placeArgs = new CardDragEventArgs(this, Input.mousePosition, transform.position)
+            if (!hasSat)
             {
-                TargetSlot = targetSlot
-            };
-            OnCardPlaced?.Invoke(this, placeArgs);
-
-            // 重置拖拽状态
+                OnCardPlaced?.Invoke(new CardDragEventArgs(this, Input.mousePosition, transform.position));
+            }
             isDragging = false;
         }
         else
         {
-            // 非拖拽状态下处理点击计数
-            if (!isDoubleClickProcessed && clickCount == 1)
-            {
-                // 单次点击但未形成双击，延迟重置（避免影响双击检测）
-                Invoke(nameof(ResetClickCount), doubleClickTime);
-            }
+            // 非拖拽状态：直接触发单击事件
+            var clickArgs = new CardDragEventArgs(this, Input.mousePosition, transform.position);
+            OnCardClicked?.Invoke(clickArgs);
         }
 
         isTouching = false;
-        isDoubleClickProcessed = false;
-    }
-
-    private void ResetClickCount()
-    {
-        clickCount = 0;
     }
 
     /// <summary>
@@ -174,4 +159,21 @@ public class DraggableCard : MonoBehaviour
         transform.rotation = originalRotation;
     }
 }
-    
+
+///// <summary>
+///// 卡牌拖拽事件参数（删除 IsDoubleClick 属性）
+///// </summary>
+//public class CardDragEventArgs
+//{
+//    //public DraggableCard Card { get; }          // 触发事件的卡牌实例
+//    public Vector2 ScreenPosition { get; }      // 事件触发时的屏幕坐标（鼠标位置）
+//    public Vector3 WorldPosition { get; }       // 事件触发时的世界坐标（卡牌位置）
+//    public CardSlot TargetSlot { get; set; }    // 放置时命中的卡牌插槽（仅放置事件有效）
+
+//    public CardDragEventArgs(DraggableCard card, Vector2 screenPos, Vector3 worldPos)
+//    {
+//        this.Card
+//        ScreenPosition = screenPos;
+//        WorldPosition = worldPos;
+//    }
+//}

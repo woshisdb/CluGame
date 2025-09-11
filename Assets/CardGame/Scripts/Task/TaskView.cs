@@ -14,6 +14,8 @@ public class TaskView : SerializedMonoBehaviour,IView
     public void BindModel(IModel model)
     {
         this.model = (TaskPanelModel)model;
+        this.onBindView();
+        this.Refresh();
     }
 
     public IModel GetModel()
@@ -29,6 +31,7 @@ public class TaskView : SerializedMonoBehaviour,IView
 
     public void Refresh()
     {
+        text.text = model.title;
         endTime.gameObject.SetActive(false);
         if(model.exeNode.GetExeType() == ExeType.WasterTime)
         {
@@ -44,15 +47,6 @@ public class TaskView : SerializedMonoBehaviour,IView
             
         }
     }
-
-    //public void StateTransition()
-    //{
-    //    var hasSwitch = model.Switch();
-    //    if (hasSwitch)
-    //    {
-    //        Refresh();//刷新当前的状态
-    //    }
-    //}
     /// <summary>
     /// 交出一系列的卡牌
     /// </summary>
@@ -67,6 +61,9 @@ public class TaskView : SerializedMonoBehaviour,IView
 
     public void Release()
     {
-        throw new System.NotImplementedException();
+    }
+    public void OnDestroy()
+    {
+        this.OnDestroyView();
     }
 }

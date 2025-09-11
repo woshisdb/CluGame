@@ -7,7 +7,7 @@ using Studio.OverOne.DragMe.Events;
 using TMPro;
 using UnityEngine;
 
-public class CardView : SerializedMonoBehaviour,IView
+public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
 {
     public TextMeshPro title;
     public TextMeshPro description;
@@ -20,6 +20,7 @@ public class CardView : SerializedMonoBehaviour,IView
     {
         this.cardModel = (CardModel)model;
         Refresh();
+        this.onBindView();
     }
 
     public IModel GetModel()
@@ -62,10 +63,12 @@ public class CardView : SerializedMonoBehaviour,IView
             Refresh();
         }
     }
-    public void Placed(IPlacedEventData placedEvent)
+    public void Placed(CardDragEventArgs placedEvent)
     {
-        var placement = placedEvent.PlacementComponent;
-        placement.GetComponent<Slot>().OnCardTryPlaced(this);
+        if(placedEvent.TargetSlot!=null)
+        {
+            placedEvent.TargetSlot.TryPlaceCard(placedEvent.Card);
+        }
     }
     /// <summary>
     /// 卡片放置在Table上
@@ -76,7 +79,23 @@ public class CardView : SerializedMonoBehaviour,IView
     }
     public void OnDestroy()
     {
-        GameFrameWork.Instance.viewModelManager.ReleaseView(this);
-        Debug.Log("OnDestroy");
+        this.OnDestroyView();
+    }
+    /// <summary>
+    /// 点击卡片
+    /// </summary>
+    public virtual void OnCardClick()
+    {
+        this.SendEvent<RefreshViewEvent>(new RefreshViewEvent(this));
+    }
+
+    public virtual List<UIItemBinder> GetUI()
+    {
+        return new List<UIItemBinder>()
+        {
+            new KVItemBinder(()=>{return "ee1"; },()=>{return "ee2"; }),
+            new KVItemBinder(()=>{return "ee1"; },()=>{return "ee2"; }),
+            new ButtonBinder(()=>{return "t1"; },()=>{})
+        };
     }
 }
