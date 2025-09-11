@@ -19,6 +19,7 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     public void BindModel(IModel model)
     {
         this.cardModel = (CardModel)model;
+        OnCreateView(this);
         Refresh();
         this.onBindView();
     }
@@ -44,11 +45,6 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
             this.countDown.text = "倒计时";
         }
     }
-    public void Release()
-    {
-        Debug.Log("shuissssss");
-    }
-
     // Start is called before the first frame update
     void Start()
     {
