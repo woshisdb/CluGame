@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class OccultCardData : CardData, IStateFlag
+public class OccultCardData : SkillCardData, IStateFlag
 {
     public OccultCardData() : base()
     {

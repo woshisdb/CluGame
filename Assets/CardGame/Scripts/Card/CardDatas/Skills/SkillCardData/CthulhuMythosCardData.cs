@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CthulhuMythosCardData : CardData, IStateFlag
+public class CthulhuMythosCardData : SkillCardData, IStateFlag
 {
     public CthulhuMythosCardData() : base()
     {

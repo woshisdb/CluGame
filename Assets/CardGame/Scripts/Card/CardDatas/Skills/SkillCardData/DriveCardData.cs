@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DriveCardData : CardData, IStateFlag
+public class DriveCardData : SkillCardData, IStateFlag
 {
     public DriveCardData() : base()
     {

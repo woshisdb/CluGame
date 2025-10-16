@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StealthCardData : CardData, IStateFlag
+public class StealthCardData : SkillCardData, IStateFlag
 {
     public StealthCardData() : base()
     {

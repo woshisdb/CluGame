@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DisguiseCardData : CardData, IStateFlag
+public class DisguiseCardData : SkillCardData, IStateFlag
 {
     public DisguiseCardData() : base()
     {

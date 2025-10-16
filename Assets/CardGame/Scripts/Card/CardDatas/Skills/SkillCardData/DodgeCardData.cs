@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DodgeCardData : CardData, IStateFlag
+public class DodgeCardData : SkillCardData, IStateFlag
 {
     public DodgeCardData() : base()
     {

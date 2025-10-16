@@ -52,7 +52,7 @@ public class CardSlot : MonoBehaviour
     /// </summary>
     /// <param name="card">要放置的卡牌</param>
     /// <returns>是否放置成功</returns>
-    public bool TryPlaceCard(DraggableCard card)
+    public bool TryPlaceCard(DraggableCard card,bool justCheck = false)
     {
         // 1. 基础放置条件校验（插槽开关、是否占用、卡牌是否有效）
         if (!isAcceptingCards || IsOccupied || card == null)
@@ -79,16 +79,18 @@ public class CardSlot : MonoBehaviour
         // 3. 自定义规则不允许，则放置失败
         if (!isAllowPlace)
             return false;
-
-        // 4. 满足所有条件，执行放置逻辑
-        currentCard = card;
-        currentCard.transform.position = GetSlotPosition();
-        currentCard.transform.rotation = transform.rotation;
-        currentCard.GetComponent<Rigidbody>().isKinematic = true;
-        onCardPlaceArgs.Invoke(new OnCardPlaceArgs
+        if (!justCheck)
         {
-            Card = currentCard.GetComponent<CardView>()
-        });
+            // 4. 满足所有条件，执行放置逻辑
+            currentCard = card;
+            currentCard.transform.position = GetSlotPosition();
+            currentCard.transform.rotation = transform.rotation;
+            currentCard.GetComponent<Rigidbody>().isKinematic = true;
+            onCardPlaceArgs.Invoke(new OnCardPlaceArgs
+            {
+                Card = currentCard.GetComponent<CardView>()
+            });
+        }
         return true;
     }
 

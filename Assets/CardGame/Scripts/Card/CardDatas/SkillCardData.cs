@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class SkillCardData : CardData,ISkillFlag
+public partial class SkillCardData : CardData,ISkillFlag
 {
     public SkillCardData():base()
     {
         title = "技能";
         description = "技能!";
+        viewType = ViewType.SkillCard;
         InitCardFlags(typeof(SkillCardData));
     }
     public int CardLevel(CardModel card)

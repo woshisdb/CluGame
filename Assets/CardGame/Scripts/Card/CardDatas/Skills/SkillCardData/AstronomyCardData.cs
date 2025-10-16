@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AstronomyCardData : CardData, IStateFlag
+public class AstronomyCardData : SkillCardData, IStateFlag
 {
     public AstronomyCardData() : base()
     {

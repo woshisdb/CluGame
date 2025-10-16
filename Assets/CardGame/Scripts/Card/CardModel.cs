@@ -8,6 +8,8 @@ public class CardModel:IModel
     /// 代表这个卡牌还可以用吗
     /// </summary>
     public bool enable;
+    public bool atLeastOne;
+    public Vector3 tablePos;
     [SerializeField]
     public CardData cardData
     {
@@ -15,6 +17,7 @@ public class CardModel:IModel
             return GameFrameWork.Instance.gameConfig.CardMap[cardEnum];
         }
     }
+    public bool OnlyOne { get { return cardData.onlyOne; } }
     public CardEnum cardEnum;
     /// <summary>
     /// 卡牌的数据信息
@@ -107,5 +110,18 @@ public class CardModel:IModel
     public bool hasSwitch()
     {
         return false;
+    }
+    public virtual void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        cardData.InitCardLineMgr(cardLineMgr);
+    }
+    public virtual List<UIItemBinder> GetUI()
+    {
+        return new List<UIItemBinder>()
+        {
+            new KVItemBinder(()=>{return "ee1"; },()=>{return "ee2"; }),
+            new KVItemBinder(()=>{return "ee2"; },()=>{return "ee2"; }),
+            new ButtonBinder(()=>{return "t1"; },()=>{})
+        };
     }
 }

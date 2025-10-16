@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AnimalTrainingCardData : CardData, IStateFlag
+public class AnimalTrainingCardData : SkillCardData, IStateFlag
 {
     public AnimalTrainingCardData() : base()
     {

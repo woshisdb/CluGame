@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FirstAidCardData : CardData, IStateFlag
+public class FirstAidCardData : SkillCardData, IStateFlag
 {
     public FirstAidCardData() : base()
     {

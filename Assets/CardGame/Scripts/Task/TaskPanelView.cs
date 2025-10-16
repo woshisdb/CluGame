@@ -10,7 +10,11 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     public TextMeshPro title;
     public TextMeshProUGUI description;
     public TaskPanelModel taskPanelModel;
-    public Dictionary<Slot, CardRequire> slotMap;
+    public TaskConfig taskConfig
+    {
+        get { return taskPanelModel.exeNode; }
+    }
+    public Dictionary<Slot, string> slotMap;
     public Transform slotRoot;
     public Transform cardRoot;
     public TextMeshPro timeRemain;
@@ -49,19 +53,40 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     {
         return taskPanelModel;
     }
+
+    public void RefreshText()
+    {
+        if (taskPanelModel.textList.ContainsKey(ChangeTextType.title))
+        {
+            this.title.text = taskPanelModel.textList[ChangeTextType.title];
+        }
+        else
+        {
+            this.title.text = taskPanelModel.title;
+        }
+
+        if (taskPanelModel.textList.ContainsKey(ChangeTextType.description))
+        {
+            this.description.text = taskPanelModel.textList[ChangeTextType.description];
+        }
+        else
+        {
+            this.description.text = taskPanelModel.description;
+        }
+    }
     /// <summary>
     /// 刷新面板信息
     /// </summary>
     /// <returns></returns>
     public void Refresh()
     {
-        this.title.text = taskPanelModel.title;
-        this.description.text = taskPanelModel.description;
-        if (taskPanelModel.exeNode.GetExeType() == ExeType.Select)//如果是选择卡片节点
+        RefreshText();
+        slotRoot.gameObject.SetActive(false);
+        cardRoot.gameObject.SetActive(false);
+        timeRemain.gameObject.SetActive(false);
+        if (taskConfig.taskConfigModules is TaskConfig_OnSucc)//如果是选择卡片节点
         {
             slotRoot.gameObject.SetActive(true);
-            cardRoot.gameObject.SetActive(false);
-            timeRemain.gameObject.SetActive(false);
             foreach (var x in slotMap)
             {
                 var hasCard = x.Key.HasCard;
@@ -70,22 +95,22 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
                 GameObject.Destroy(x.Key.gameObject);
             }
 
+            var module = (TaskConfig_OnSucc)taskConfig.taskConfigModules;
             slotMap.Clear();
-            for (int no = 0; no < ((SelectExeNode)taskPanelModel.exeNode).cardRequires.Count; no++)
-                //foreach (var x in ((SelectExeNode)taskPanelModel.exeNode).cardRequires)
+            int no = 0;
+            foreach(var x in module.NeedCards())
             {
-                var x = ((SelectExeNode)taskPanelModel.exeNode).cardRequires[no];
                 var slotTemplate = GameFrameWork.Instance.gameConfig.slotTemplate;
                 var obj = GameObject.Instantiate(slotTemplate);
-                slotMap.Add(obj.GetComponent<Slot>(), x);
+                slotMap.Add(obj.GetComponent<Slot>(), x.Key);
                 obj.transform.SetParent(slotRoot);
                 obj.GetComponent<Slot>().Pos(no % 3, no / 3);
-                obj.GetComponent<Slot>().name.text = x.name;
+                obj.GetComponent<Slot>().name.text = x.Key;
                 obj.GetComponent<Slot>().taskPanelView = this;
                 obj.GetComponent<Slot>().isInit = true;
-                if (taskPanelModel.cardsMap.ContainsKey(x))//包含这个卡的内容
+                if (taskPanelModel.cardsMap.ContainsKey(x.Key))//包含这个卡的内容
                 {
-                    var card = GameFrameWork.Instance.AddCardByCardModel(taskPanelModel.cardsMap[x],new Vector3(0,0,0));
+                    var card = GameFrameWork.Instance.AddCardByCardModel(taskPanelModel.cardsMap[x.Key],new Vector3(0,0,0), true);
                     //obj.GetComponent<Slot>().OnCardTryPlaced(new OnCardPlaceArgs
                     //{
                     //    Card = card.GetComponent<CardView>()
@@ -93,20 +118,17 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
                     obj.GetComponent<CardSlot>().TryPlaceCard(card.GetComponent<DraggableCard>());
                 }
                 obj.GetComponent<Slot>().isInit = false;
+                no++;
             }
         }
-        else if (taskPanelModel.exeNode.GetExeType() == ExeType.WasterTime)//花费时间的节点
+        else if (taskPanelModel.exeNode is TaskConfig_TimeOut )//花费时间的节点
         {
-            slotRoot.gameObject.SetActive(false);
-            cardRoot.gameObject.SetActive(false);
             timeRemain.gameObject.SetActive(true);
             timeRemain.text = taskPanelModel.GetRemainTime().ToString();
         }
         else//如果是结束节点
         {
-            slotRoot.gameObject.SetActive(false);
             cardRoot.gameObject.SetActive(true);
-            timeRemain.gameObject.SetActive(false);
         }
     }
     /// <summary>
@@ -128,7 +150,15 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
         if(slotMap.ContainsKey(slot))
         {
             var require = slotMap[slot];
-            return require.Require(cardModel);
+            if (taskConfig.taskConfigModules is TaskConfig_OnSucc)
+            {
+                var cfg = (TaskConfig_OnSucc)taskConfig.taskConfigModules;
+                return cfg.CanPut(require, cardModel);
+            }
+            else
+            {
+                return false;
+            }
         }
         return false;
     }

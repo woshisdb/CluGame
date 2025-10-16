@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PsychoanalysisCardData : CardData, IStateFlag
+public class PsychoanalysisCardData : SkillCardData, IStateFlag
 {
     public PsychoanalysisCardData() : base()
     {

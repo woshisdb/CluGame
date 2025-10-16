@@ -14,6 +14,14 @@ public class NResidentArea : SpaceCardData
     {
         return CardEnum.NResidentArea;
     }
+    public override bool CanGo()
+    {
+        return true;
+    }
+    public override SpaceType GetSpace()
+    {
+        return SpaceType.space1;
+    }
 }
 
 public class SResidentArea : SpaceCardData
@@ -70,6 +78,11 @@ public class CentralHospital : SpaceCardData
     {
         return CardEnum.CentralHospital;
     }
+    public override void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        base.InitCardLineMgr(cardLineMgr);
+        cardLineMgr.AddCardLine(new CardLineData(CardEnum.CentralHospital, CardEnum.WResidentArea, "1回合"));
+    }
 }
 
 public class MUniversity : SpaceCardData
@@ -83,6 +96,11 @@ public class MUniversity : SpaceCardData
     public override CardEnum GetCardType()
     {
         return CardEnum.MUniversity;
+    }
+    public override void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        base.InitCardLineMgr(cardLineMgr);
+        cardLineMgr.AddCardLine(new CardLineData(CardEnum.MUniversity, CardEnum.NResidentArea, "1回合"));
     }
 }
 
@@ -98,6 +116,11 @@ public class Museum : SpaceCardData
     {
         return CardEnum.Museum;
     }
+    public override void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        base.InitCardLineMgr(cardLineMgr);
+        cardLineMgr.AddCardLine(new CardLineData(CardEnum.Museum, CardEnum.NResidentArea, "1回合"));
+    }
 }
 
 public class Market : SpaceCardData
@@ -112,6 +135,11 @@ public class Market : SpaceCardData
     {
         return CardEnum.Market;
     }
+    public override void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        base.InitCardLineMgr(cardLineMgr);
+        cardLineMgr.AddCardLine(new CardLineData(CardEnum.Market, CardEnum.SResidentArea, "1回合"));
+    }
 }
 
 public class WoodLand : SpaceCardData
@@ -125,5 +153,29 @@ public class WoodLand : SpaceCardData
     public override CardEnum GetCardType()
     {
         return CardEnum.WoodLand;
+    }
+    public override void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        base.InitCardLineMgr(cardLineMgr);
+        cardLineMgr.AddCardLine(new CardLineData(CardEnum.WoodLand, CardEnum.EResidentArea, "1回合"));
+    }
+}
+
+public class Pool : SpaceCardData
+{
+    public Pool() : base()
+    {
+        title = "水潭渔场";
+        description = "N";
+    }
+
+    public override CardEnum GetCardType()
+    {
+        return CardEnum.Pool;
+    }
+    public override void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+        base.InitCardLineMgr(cardLineMgr);
+        cardLineMgr.AddCardLine(new CardLineData(CardEnum.Pool, CardEnum.EResidentArea, "1回合"));
     }
 }

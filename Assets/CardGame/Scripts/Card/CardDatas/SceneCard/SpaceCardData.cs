@@ -2,6 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum SpaceType
+{
+    space1
+}
+
+public class SpaceConfig
+{
+    /// <summary>
+    /// 空间类型
+    /// </summary>
+    public SpaceType spaceType;
+    /// <summary>
+    /// 摄像机到达的位置
+    /// </summary>
+    public Transform pos;
+}
+
 public abstract class SpaceCardData : CardData
 {
     public SpaceCardData() : base()
@@ -15,7 +32,14 @@ public abstract class SpaceCardData : CardData
     {
         return new SpaceCardModel(this);
     }
-
+    public virtual bool CanGo()
+    {
+        return false;
+    }
+    public virtual SpaceType GetSpace()
+    {
+        return SpaceType.space1;
+    }
 }
 
 
@@ -25,5 +49,20 @@ public class SpaceCardModel : CardModel
     public SpaceCardModel(CardData cardData) : base(cardData)
     {
         // 模型初始化逻辑
+    }
+    public override List<UIItemBinder> GetUI()
+    {
+        var ret = new List<UIItemBinder>()
+        {
+        };
+        if(((SpaceCardData)cardData).CanGo())
+        {
+            ret.Add(
+            new ButtonBinder(() => { return "前往"; }, () =>
+            {
+                GameFrameWork.Instance.GoToSpace(((SpaceCardData)cardData).GetSpace());
+            }));
+        }
+        return ret;
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FineArtCardData : CardData, IStateFlag
+public class FineArtCardData : SkillCardData, IStateFlag
 {
     public FineArtCardData() : base()
     {

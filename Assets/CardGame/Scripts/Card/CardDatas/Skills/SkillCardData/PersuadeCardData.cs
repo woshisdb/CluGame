@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PersuadeCardData : CardData, IStateFlag
+public class PersuadeCardData : SkillCardData, IStateFlag
 {
     public PersuadeCardData() : base()
     {

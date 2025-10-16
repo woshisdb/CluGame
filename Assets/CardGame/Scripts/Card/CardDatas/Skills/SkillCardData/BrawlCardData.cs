@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BrawlCardData : CardData, IStateFlag
+public class BrawlCardData : SkillCardData, IStateFlag
 {
     public BrawlCardData() : base()
     {

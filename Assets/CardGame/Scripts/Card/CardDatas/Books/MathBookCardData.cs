@@ -9,8 +9,8 @@ public class MathBookCardData : CardData,IBookFlag
 {
     public MathBookCardData() : base()
     {
-        title = "ÊýÑ§Êé";
-        description = "ÊýÑ§¼¼ÄÜUP";
+        title = "æ•°å­¦ä¹¦";
+        description = "";
         InitCardFlags(typeof(MathBookCardData));
     }
 
@@ -35,10 +35,10 @@ public class MathBookCardData : CardData,IBookFlag
     }
 }
 
-public class MathBookCardModel : CardModel
+public class MathBookCardModel : BookCardModel
 {
     public MathBookCardModel(CardData cardData) : base(cardData)
     {
-
+        
     }
 }

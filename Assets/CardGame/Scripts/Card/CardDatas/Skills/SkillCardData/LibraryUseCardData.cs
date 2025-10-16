@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LibraryUseCardData : CardData, IStateFlag
+public class LibraryUseCardData : SkillCardData, IStateFlag
 {
     public LibraryUseCardData() : base()
     {

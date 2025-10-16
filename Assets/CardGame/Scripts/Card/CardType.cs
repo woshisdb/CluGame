@@ -21,7 +21,9 @@ public enum CardFlag
     state,
     scene,
     space,
+    needJob,
 }
+
 /// <summary>
 /// 卡牌的枚举类，定义CoC跑团中各类卡牌类型
 /// </summary>
@@ -31,12 +33,12 @@ public enum CardEnum
     /// 当前拥有的金币/资金
     /// </summary>
     money,
-
+//-----------------------------书籍
     /// <summary>
     /// 数学相关的书籍/知识
     /// </summary>
     mathbook,
-
+//-----------------------------技能
     /// <summary>
     /// 力量属性相关卡牌
     /// </summary>
@@ -277,5 +279,33 @@ public enum CardEnum
     Museum,//博物馆
     Market,//市场
     WoodLand,//古木林场
+    Pool,
     NpcD1,//npc
+    //大学教学楼
+    MUniversity_TeachingBuilding,
+    /// <summary>
+    /// 大学的实验楼
+    /// </summary>
+    Muniversity_LabBuilding,
+    /// <summary>
+    /// 大学图书馆
+    /// </summary>
+    Muniversity_Library,
+    /// <summary>
+    /// 大学宿舍
+    /// </summary>
+    Muniversity_Dorm,
+    /// <summary>
+    /// 体育场
+    /// </summary>
+    Muniversity_Gym,
+    /// <summary>
+    /// 艺术楼
+    /// </summary>
+    Muniversity_ArtBuilding,
+    /// <summary>
+    /// 大学附属医院
+    /// </summary>
+    Muniversity_Hospital,
+    JobRecord,
 }

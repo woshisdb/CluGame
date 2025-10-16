@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LocksmithCardData : CardData, IStateFlag
+public class LocksmithCardData : SkillCardData, IStateFlag
 {
     public LocksmithCardData() : base()
     {

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SpotHiddenCardData : CardData, IStateFlag
+public class SpotHiddenCardData : SkillCardData, IStateFlag
 {
     public SpotHiddenCardData() : base()
     {

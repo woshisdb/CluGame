@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FastTalkCardData : CardData, IStateFlag
+public class FastTalkCardData : SkillCardData, IStateFlag
 {
     public FastTalkCardData() : base()
     {

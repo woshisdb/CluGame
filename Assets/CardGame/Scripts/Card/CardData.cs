@@ -42,6 +42,10 @@ public abstract class CardData
     public ViewType viewType;
     public HashSet<CardFlag> cardFlags;
     public bool needRefresh;
+    /// <summary>
+    /// 只能有一个
+    /// </summary>
+    public bool onlyOne;
     public CardData()
     {
         cardFlags = new HashSet<CardFlag>();
@@ -61,5 +65,9 @@ public abstract class CardData
             var enums = InterfaceHelper.GetBindEnums<CardFlag>(t);
             cardFlags.UnionWith(enums);
         }
+    }
+    public virtual void InitCardLineMgr(CardLineMgr cardLineMgr)
+    {
+
     }
 }

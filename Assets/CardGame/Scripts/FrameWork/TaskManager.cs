@@ -7,11 +7,14 @@ public class TaskManager
     /// <summary>
     /// 整个游戏的一系列任务
     /// </summary>
-    public List<TaskPanelModel> tasks;
+    public List<TaskPanelModel> tasks{
+        get
+        {
+            return GameFrameWork.Instance.gameConfig.saveData.saveFile.tasks;
+        }}
     
     public TaskManager()
     {
-        tasks = new List<TaskPanelModel>();
     }
     public void Init()
     {

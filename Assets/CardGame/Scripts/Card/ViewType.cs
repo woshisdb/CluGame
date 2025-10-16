@@ -26,7 +26,7 @@ public enum ViewType
     /// </summary>
     BookCard,
     /// <summary>
-    /// NPC卡牌
+    /// 工作记录
     /// </summary>
-    NpcCard,
+    JobRecordCard
 }

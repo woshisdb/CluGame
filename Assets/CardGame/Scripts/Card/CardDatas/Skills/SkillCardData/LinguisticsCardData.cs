@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LinguisticsCardData : CardData, IStateFlag
+public class LinguisticsCardData : SkillCardData, IStateFlag
 {
     public LinguisticsCardData() : base()
     {

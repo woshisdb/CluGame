@@ -33,18 +33,10 @@ public class TaskView : SerializedMonoBehaviour,IView
     {
         text.text = model.title;
         endTime.gameObject.SetActive(false);
-        if(model.exeNode.GetExeType() == ExeType.WasterTime)
+        if(model.exeNode.taskConfigModules is TaskConfig_TimeOut)
         {
             endTime.gameObject.SetActive(true);
             endTime.text = model.GetRemainTime().ToString();
-        }
-        else if(model.exeNode.GetExeType() == ExeType.Select)
-        {
-            
-        }
-        else
-        {
-            
         }
     }
     /// <summary>

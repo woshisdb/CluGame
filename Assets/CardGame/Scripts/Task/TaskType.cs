@@ -8,33 +8,6 @@ public enum TaskType
     Sleep,
 }
 
-public abstract class CardRequire
-{
-    /// <summary>
-    /// 需求卡牌名字
-    /// </summary>
-    public string name;
-    public CardRequire(string name)
-    {
-        this.name = name;
-    }
-
-    public abstract bool Require(CardModel card);
-    public virtual bool Satify(TaskPanelModel task)
-    {
-        return task.TryFindCard(this) != null;
-    }
-}
-/// <summary>
-/// 执行的枚举
-/// </summary>
-public enum ExeEnum
-{
-    e1,
-    e2,
-    e3,
-}
-
 public enum ExeType
 {
     /// <summary>

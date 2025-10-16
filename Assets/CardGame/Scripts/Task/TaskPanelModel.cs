@@ -1,40 +1,28 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using UnityEngine;
-
-public class SlotRequire
-{
-    public Func<CardModel, bool> Require;
-    /// <summary>
-    /// 当满足时的处理
-    /// </summary>
-    public Func<CardModel, bool> OnAdd;
-    public Func<CardModel, bool> OnRemove;
-    public string name;
-    public SlotRequire(Func<CardModel, bool> require, string name)
-    {
-        Require = require;
-        this.name = name;
-    }
-}
 
 [SerializeField]
 public class TaskPanelModel:IModel
 {
     [SerializeField]
-    public ExeNode exeNode;
-    public string description { get { return exeNode.description; } }
-    public string title { get { return exeNode.title; } }
+    public TaskConfig exeNode;
+    public string description { get { return exeNode.taskConfigModules.description; } }
+    public string title { get { return exeNode.taskConfigModules.title; } }
     /// <summary>
     /// 卡片映射
     /// </summary>
-    public Dictionary<CardRequire,CardModel> cardsMap;
+    public Dictionary<string,CardModel> cardsMap;
+
+    public Dictionary<ChangeTextType,string> textList;
     public float beginTime;
     public TaskPanelModel()
     {
-        cardsMap = new Dictionary<CardRequire,CardModel>();
+        cardsMap = new Dictionary<string,CardModel>();
+        textList = new Dictionary<ChangeTextType, string>();
     }
 
     public IView CreateView()
@@ -43,15 +31,22 @@ public class TaskPanelModel:IModel
         view.BindModel(this);
         return view;
     }
-    public void AddCard(CardRequire cardRequire,CardModel cardModel)
+    public void AddCard(string cardRequire,CardModel cardModel)
     {
         cardsMap.Add(cardRequire, cardModel);
     }
-    public void RemoveCard(CardRequire cardRequire)
+    public void RemoveCard(string cardRequire)
     {
         cardsMap.Remove(cardRequire);
     }
-	public CardModel TryFindCard(CardRequire cardRequire)
+
+    public void SetTaskText(Dictionary<ChangeTextType,string> dic)
+    {
+        textList.Clear();
+        textList = dic;
+        GameFrameWork.Instance.viewModelManager.RefreshView(this);
+    }
+	public CardModel TryFindCard(string cardRequire)
 	{
         if (!cardsMap.ContainsKey(cardRequire))
         {
@@ -76,10 +71,10 @@ public class TaskPanelModel:IModel
     /// <returns></returns>
     public bool CheckTimeSwitch()
     {
-        if(exeNode.GetExeType()== ExeType.WasterTime)
+        if(exeNode.taskConfigModules is TaskConfig_TimeOut)
         {
-            var te = (WasterTimeExeNode)exeNode;
-            var remainTime = ((((WasterTimeExeNode)(exeNode)).GetTime() + beginTime) - Time.time);
+            var te = (TaskConfig_TimeOut)exeNode.taskConfigModules;
+            var remainTime = (( te.WasterTime() + beginTime) - Time.time);
             if(remainTime < 0)//需要进行转换
             {
                 te.TimeSwitch(this);
@@ -94,19 +89,23 @@ public class TaskPanelModel:IModel
     /// <returns></returns>
     public bool CanChangeCardSwitch()
     {
-        return exeNode.WhenCardChange(this);
-        //if (exeNode.GetExeType() == ExeType.WasterTime)
-        //{
-        //    return false;
-        //}
-        //else if (exeNode.GetExeType() == ExeType.Select)///选择节点
-        //{
-        //    return exeNode.WhenCardChange(this);
-        //}
-        //else//结束节点
-        //{
-        //    return false;
-        //}
+        // return exeNode.WhenCardChange(this);
+        if (exeNode.taskConfigModules is TaskConfig_OnChange)
+        {
+            var change = (TaskConfig_OnChange)exeNode.taskConfigModules;
+            if (change.WhenCardChange(this))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
     /// <summary>
     /// 点击继续的时候检测状态变化
@@ -114,29 +113,35 @@ public class TaskPanelModel:IModel
     /// <returns></returns>
     public bool CanClickSwitch()
     {
-        if (exeNode.GetExeType() == ExeType.WasterTime)
+        if (exeNode.taskConfigModules is TaskConfig_OnSucc)
+        {
+            var cfg = (TaskConfig_OnSucc)exeNode.taskConfigModules;
+            if (cfg.CanClickChange(this))
+            {
+                cfg.ClickChange(this);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
         {
             return false;
         }
-        else if (exeNode.GetExeType() == ExeType.Select)///选择节点
-        {
-            return ((SelectExeNode)exeNode).CanClickChange(this);
-        }
-        else//结束节点
-        {
-            return ((FinishExeNode)exeNode).CanClickChange(this);
-        }
     }
-    public void SetExeNode(ExeNode exeNode)
+    public void SetExeNode(TaskConfig exeNode)
     {
         this.exeNode = exeNode;
         beginTime = Time.time;
+        textList.Clear();
     }
     public float GetRemainTime()
     {
-        return ((((WasterTimeExeNode)(exeNode)).GetTime() + beginTime) - Time.time);
+        return ((((TaskConfig_TimeOut)(exeNode.taskConfigModules)).WasterTime() + beginTime) - Time.time);
     }
-    public void TryReleaseCard(CardRequire cardRequire)
+    public void TryReleaseCard(string cardRequire)
     {
         var card = TryFindCard(cardRequire);
         if (card!=null)

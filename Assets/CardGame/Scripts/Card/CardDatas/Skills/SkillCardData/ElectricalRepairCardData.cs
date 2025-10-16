@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ElectricalRepairCardData : CardData, IStateFlag
+public class ElectricalRepairCardData : SkillCardData, IStateFlag
 {
     public ElectricalRepairCardData() : base()
     {

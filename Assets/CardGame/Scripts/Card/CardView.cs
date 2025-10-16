@@ -15,12 +15,20 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     public CardModel cardModel;
     public TextMeshPro countDown;
     public Slot slot;
-    
+    public CardLineMgr lineMgr;
+    public bool justCkeck { get { return cardModel.atLeastOne; } }
+    public Vector3 startPos;
+    /// <summary>
+    /// 纯SlotCard
+    /// </summary>
+    public bool pureSlotCard;
     public void BindModel(IModel model)
     {
         this.cardModel = (CardModel)model;
         Refresh();
         this.onBindView();
+        if(!pureSlotCard)
+        lineMgr = new CardLineMgr(cardModel);
     }
 
     public IModel GetModel()
@@ -29,13 +37,25 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     }
     public void onGrab()
     {
-        if(slot != null)
+        startPos = this.transform.localPosition;
+        if(pureSlotCard)
         {
-            slot.OnCardReleased(this);
-            this.slot = null;
+            if (slot != null)
+            {
+                slot.OnCardReleased(this);
+                this.slot = null;
+            }
+        }
+        else
+        {
+            if (slot != null)
+            {
+                slot.OnCardReleased(this);
+                this.slot = null;
+            }
         }
     }
-    public void Refresh()
+    public virtual void Refresh()
     {
         if (cardModel!=null)
         {
@@ -53,16 +73,59 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     // Update is called once per frame
     void Update()
     {
+        if(!pureSlotCard)
+        UpdateLine();
         if (cardModel!=null && cardModel.cardData.needRefresh)
         {
             Refresh();
         }
     }
+    public virtual void WhenCanSuccPlace(CardDragEventArgs placedEvent)
+    {
+        var obj = GameFrameWork.instance.AddCardByCardModel(cardModel, Vector3.zero, true);
+        placedEvent.TargetSlot.TryPlaceCard(obj.GetComponent<DraggableCard>());
+    }
     public void Placed(CardDragEventArgs placedEvent)
     {
-        if(placedEvent.TargetSlot!=null)
+        if (pureSlotCard&&justCkeck)
         {
-            placedEvent.TargetSlot.TryPlaceCard(placedEvent.Card);
+            if (placedEvent.TargetSlot != null)
+            {
+                bool succPut = placedEvent.TargetSlot.TryPlaceCard(placedEvent.Card, justCkeck);
+                transform.localPosition = startPos;
+                if (!succPut)
+                {
+                    transform.localPosition = startPos;
+                    GameObject.Destroy(gameObject);
+                }
+            }
+            else
+            {
+                GameObject.Destroy(gameObject);
+            }
+        }
+        else
+        {
+            if (placedEvent.TargetSlot != null)
+            {
+                if (justCkeck)//不会放到插槽上,而是进行Check判断
+                {
+                    bool succPut = placedEvent.TargetSlot.TryPlaceCard(placedEvent.Card, justCkeck);
+                    if(succPut)
+                    {
+                        transform.localPosition = startPos;
+                        WhenCanSuccPlace(placedEvent);
+                    }
+                }
+                else
+                {
+                    bool succPut = placedEvent.TargetSlot.TryPlaceCard(placedEvent.Card, justCkeck);
+                    if (!succPut)
+                    {
+                        transform.localPosition = startPos;
+                    }
+                }
+            }
         }
     }
     /// <summary>
@@ -86,16 +149,39 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
 
     public virtual List<UIItemBinder> GetUI()
     {
-        return new List<UIItemBinder>()
-        {
-            new KVItemBinder(()=>{return "ee1"; },()=>{return "ee2"; }),
-            new KVItemBinder(()=>{return "ee1"; },()=>{return "ee2"; }),
-            new ButtonBinder(()=>{return "t1"; },()=>{})
-        };
+        return cardModel.GetUI();
     }
 
     public void Release()
     {
 
+    }
+    public void UpdateLine()
+    {
+        foreach(var item in lineMgr.cardLines)
+        {
+            if (lineMgr.connectors.ContainsKey(item)&& lineMgr.connectors[item]==null)
+            {
+                lineMgr.connectors.Remove(item);
+            }
+            if(!lineMgr.connectors.ContainsKey(item))
+            {
+                CreateLine(item);
+            }
+        }
+    }
+    public void CreateLine(CardLineData data)
+    {
+        var fromObj = GameFrameWork.instance.cardsManager.FindCardByEnum(data.from);
+        var toObj = GameFrameWork.instance.cardsManager.FindCardByEnum(data.to);
+        if(fromObj && toObj)
+        {
+            var lineTempate = GameFrameWork.Instance.gameConfig.lineTemplate;
+            var obj = GameObject.Instantiate(lineTempate);
+            var cmp = obj.GetComponent<ObjectConnector>();
+            cmp.Bind(fromObj.transform, toObj.transform, data.action);
+            cmp.transform.SetParent(transform);
+            lineMgr.connectors[data] = cmp;
+        }
     }
 }

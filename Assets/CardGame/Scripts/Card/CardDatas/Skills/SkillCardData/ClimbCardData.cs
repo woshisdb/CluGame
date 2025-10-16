@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ClimbCardData : CardData, IStateFlag
+public class ClimbCardData : SkillCardData, IStateFlag
 {
     public ClimbCardData() : base()
     {

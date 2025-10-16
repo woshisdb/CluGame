@@ -22,7 +22,9 @@ public class GameFrameWork : SerializedMonoBehaviour
     public TaskManager taskManager;
 
     public ViewModelManager viewModelManager;
+    public Camera mainCamera;
 
+    public Dictionary<SpaceType, SpaceConfig> spaces;
 
     void Awake()
     {
@@ -34,17 +36,20 @@ public class GameFrameWork : SerializedMonoBehaviour
     {
         AddCardByCardData(gameConfig.CardMap[cardEnum],pos);
     }
-    public void AddCardByCardData(CardData cardData, Vector3 pos)
+    public void AddCardByCardData(CardData cardData, Vector3 pos, bool pureSlotCard = false)
     {
         //var cardTemplate = gameConfig.viewDic[cardData.viewType];
-        AddCardByCardModel(cardData.CreateModel(),pos);
+        AddCardByCardModel(cardData.CreateModel(),pos,pureSlotCard);
     }
 
-    public GameObject AddCardByCardModel(CardModel cardModel,Vector3 pos)
+    public GameObject AddCardByCardModel(CardModel cardModel,Vector3 pos,bool pureSlotCard=false)
     {
+        Debug.Log(cardModel.cardData.viewType);
         var cardTemplate = gameConfig.viewDic[cardModel.cardData.viewType];
         var obj = GameObject.Instantiate(cardTemplate);
         var cv = obj.GetComponent<CardView>();
+        cv.pureSlotCard = pureSlotCard;
+        Debug.Log(pureSlotCard);
         cv.BindModel(cardModel);
         obj.transform.GetComponent<DraggableCard>().transform.localPosition = (pos);
         return obj;
@@ -64,5 +69,11 @@ public class GameFrameWork : SerializedMonoBehaviour
     {
         cardsManager.Update();
         taskManager.Update();
+    }
+
+    public void GoToSpace(SpaceType spaceType)
+    {
+        var ret = spaces[spaceType];
+        mainCamera.transform.position = ret.pos.position + new Vector3(0,40,0);
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class IntimidateCardData : CardData, IStateFlag
+public class IntimidateCardData : SkillCardData, IStateFlag
 {
     public IntimidateCardData() : base()
     {
