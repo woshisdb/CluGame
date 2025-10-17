@@ -23,3 +23,12 @@ public class Muniversity_Hospital : SpaceCardData
         return SpaceType.space1;
     }
 }
+
+public class Muniversity_HospitalModel : SpaceCardModel
+{
+    public Muniversity_HospitalModel(CardData cardData) : base(cardData)
+    {
+        
+    }
+
+}

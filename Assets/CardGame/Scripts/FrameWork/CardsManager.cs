@@ -16,6 +16,24 @@ public class CardsManager
     public CardsManager()
     {
     }
+    [Button]
+    public void CreateNpcCard(string name,Vector3 pos)
+    {
+        var data = GameFrameWork.Instance.gameConfig.NpcCardDatas[name];
+        var obj = data.CreateModelByNpc();
+        cardmodels.Add(obj);
+        GameFrameWork.Instance.gameConfig.saveData.saveFile.npcs.Add((NpcCardModel)obj);///某个地点的某个职业
+        GameFrameWork.Instance.AddCardByCardModel(obj, pos);
+    }
+    
+    [Button]
+    public void CreateJobCard(IHaveJob provider,string jobId,Vector3 pos)
+    {
+        var obj = GameFrameWork.Instance.gameConfig.JobCardDatas[jobId].CreateSpecialJob(provider);
+        cardmodels.Add(obj);
+        GameFrameWork.Instance.gameConfig.saveData.saveFile.jobs.Add((JobCardModel)obj);///某个地点的某个职业
+        GameFrameWork.Instance.AddCardByCardModel(obj, pos);
+    }
     /// <summary>
     /// 创建卡牌
     /// </summary>

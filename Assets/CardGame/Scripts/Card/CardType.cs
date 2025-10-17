@@ -308,4 +308,5 @@ public enum CardEnum
     /// </summary>
     Muniversity_Hospital,
     JobRecord,
+    JobCard,
 }

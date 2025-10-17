@@ -2,21 +2,52 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NpcCard : CardData
+public enum RelationType
+{
+    father,
+    mother,
+    child,
+}
+
+public enum SexType
+{
+    male,
+    female,
+}
+
+public class NpcCardData : CardData
 {
     /// <summary>
     /// NPC的名字
     /// </summary>
     public string NpcName;
-    public NpcCard():base()
+    /// <summary>
+    /// 年龄
+    /// </summary>
+    public int age;
+    /// <summary>
+    /// 性别
+    /// </summary>
+    public SexType sex;
+    /// <summary>
+    /// npc的信息
+    /// </summary>
+    public Dictionary<string, int> npcInfo;
+    public Dictionary<RelationType,string> relationship;
+    public NpcCardData():base()
     {
         viewType = ViewType.NPCCard;
+        npcInfo = new Dictionary<string, int>();
     }
+    
     public override CardModel CreateModel()
     {
-        return new NpcCardModel(this);
+        return null;
     }
-
+    public CardModel CreateModelByNpc()
+    {
+        return new NpcCardModel(this.NpcName,this);
+    }
     public override CardEnum GetCardType()
     {
         return CardEnum.npc;
@@ -130,92 +161,22 @@ public enum NpcMind
     ForbiddenKnowledgeAcceptance
 }
 
-
-public class MindModel
-{
-    public NpcCardModel npc;
-    public MindModel(NpcCardModel npc)
-    {
-        this.npc = npc;
-        npc.SetDataByKey(NpcMind.Courage.ToString(),UnityEngine.Random.Range(0, 1000) );
-        npc.SetDataByKey(NpcMind.Composure.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Impulsiveness.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Aggressiveness.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Greed.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Curiosity.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Piety.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Skepticism.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Morality.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Authority.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Loyalty.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.Sociability.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.PhobiaTrigger.ToString(), UnityEngine.Random.Range(0, 1000));
-        npc.SetDataByKey(NpcMind.ForbiddenKnowledgeAcceptance.ToString(), UnityEngine.Random.Range(0, 1000));
-    }
-}
-
 /// <summary>
 /// 角色卡
 /// </summary>
 public class NpcCardModel : CardModel
 {
-    public string MindModel = "MindModel";
-    public NpcCardModel(CardData cardData) : base(cardData)
+    public string npcId;
+    [SerializeField]
+    public override CardData cardData
     {
-        // 模型初始化逻辑
-        SetDataByKey(MindModel,new MindModel(this));
-        InitCardByFlag();
+        get
+        {
+            return GameFrameWork.Instance.gameConfig.NpcCardDatas[npcId];
+        }
     }
-    public MindModel GetMindModel()
+    public NpcCardModel(string npcId,CardData cardData) : base(cardData)
     {
-        return GetObjectByKey<MindModel>(MindModel);
-    }
-    public void InitCardByFlag()
-    {
-        SetDataByKey(CardEnum.strength.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.constitution.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.size.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.dexterity.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.appearance.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.intelligence.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.power.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.education.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.luck.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.sanity.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.health.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.spotHidden.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.listen.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.psychology.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.occult.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.cthulhuMythos.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.archaeology.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.history.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.creditRating.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.firstAid.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.medicine.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.mechanicalRepair.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.electricalRepair.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.electronics.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.drive.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.dodge.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.persuade.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.stealth.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.brawl.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.firearms.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.fastTalk.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.locksmith.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.linguistics.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.disguise.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.animalTraining.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.performance.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.astronomy.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.charm.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.climb.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.fineArt.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.intimidate.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.libraryUse.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.psychoanalysis.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.track.ToString(), UnityEngine.Random.Range(0, 1000));
-        SetDataByKey(CardEnum.throwing.ToString(), UnityEngine.Random.Range(0, 1000));
+        this.npcId = npcId;
     }
 }

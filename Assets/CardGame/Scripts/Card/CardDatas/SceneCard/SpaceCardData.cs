@@ -44,10 +44,11 @@ public abstract class SpaceCardData : CardData
 
 
 
-public class SpaceCardModel : CardModel
+public class SpaceCardModel : CardModel,IHaveJob
 {
     public SpaceCardModel(CardData cardData) : base(cardData)
     {
+        SetDataByKey("Jobs",new List<JobCardModel>());
         // 模型初始化逻辑
     }
     public override List<UIItemBinder> GetUI()
@@ -63,6 +64,39 @@ public class SpaceCardModel : CardModel
                 GameFrameWork.Instance.GoToSpace(((SpaceCardData)cardData).GetSpace());
             }));
         }
+
+        var jobs = GetJobs();
+        if (jobs!=null)
+        {
+            var jobui = new List<UIItemBinder>();
+            foreach (var job in jobs)
+            {
+                jobui.Add(new ButtonBinder(() =>
+                {
+                    return job.GetJobInfo().jobName;
+                }, () =>
+                {
+                    
+                }));
+            }
+            ret.Add(new TableItemBinder(() => { return "职位";},jobui));
+        }
         return ret;
+    }
+
+    public void AddJob(JobCardModel jobHandle)
+    {
+        var jobs =GetObjectByKey<List<JobCardModel>>("Jobs");
+        if (jobs == null)
+        {
+            SetDataByKey("Jobs",new List<JobCardModel>());
+        }
+        jobs =GetObjectByKey<List<JobCardModel>>("Jobs");
+        jobs.Add(jobHandle);
+    }
+
+    public List<JobCardModel> GetJobs()
+    {
+        return GetObjectByKey<List<JobCardModel>>("Jobs");
     }
 }

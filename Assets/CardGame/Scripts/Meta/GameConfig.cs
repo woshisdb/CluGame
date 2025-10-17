@@ -7,8 +7,18 @@ public class GameConfig : SerializedScriptableObject
 {
     public GameObject slotTemplate;
     public Dictionary<ViewType, GameObject> viewDic;
+    /// <summary>
+    /// 任务的配置
+    /// </summary>
     public Dictionary<string, TaskConfig> TaskConfigs;
+    /// <summary>
+    /// 职位类型的配置
+    /// </summary>
     public Dictionary<string,JobCardData> JobCardDatas;
+    /// <summary>
+    /// Npc的配置
+    /// </summary>
+    public Dictionary<string, NpcCardData> NpcCardDatas;
     public GameObject taskTemplate;
     public GameObject kvItemUI;
     public GameObject buttonUI;
@@ -87,6 +97,7 @@ public class GameConfig : SerializedScriptableObject
             {CardEnum.throwing,new ThrowCardData()},
             {CardEnum.mathbook,new MathBookCardData()},
             {CardEnum.JobRecord,new JobRecordCardData()},
+            {CardEnum.JobCard,new JobCardData()},
         };
     }
 
@@ -95,5 +106,73 @@ public class GameConfig : SerializedScriptableObject
         TaskConfig res = null;
         TaskConfigs.TryGetValue(name,out res);
         return res;
+    }
+
+    [Button]
+    public void CreateNpcData(string name)
+    {
+        var npc = new NpcCardData();
+        npc.NpcName = name;
+        npc.age = 20;
+        NpcCardDatas[name] = npc;
+        npc.npcInfo[CardEnum.strength.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.constitution.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.size.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.dexterity.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.appearance.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.intelligence.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.power.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.education.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.luck.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.sanity.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.health.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.spotHidden.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.listen.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.psychology.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.occult.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.cthulhuMythos.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.archaeology.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.history.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.creditRating.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.firstAid.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.medicine.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.mechanicalRepair.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.electricalRepair.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.electronics.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.drive.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.dodge.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.persuade.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.stealth.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.brawl.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.firearms.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.fastTalk.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.locksmith.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.linguistics.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.disguise.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.animalTraining.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.performance.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.astronomy.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.charm.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.climb.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.fineArt.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.intimidate.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.libraryUse.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.psychoanalysis.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.track.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[CardEnum.throwing.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Courage.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Composure.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Impulsiveness.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Aggressiveness.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Greed.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Curiosity.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Piety.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Skepticism.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Morality.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Authority.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Loyalty.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.Sociability.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.PhobiaTrigger.ToString()] = UnityEngine.Random.Range(0, 1000);
+        npc.npcInfo[NpcMind.ForbiddenKnowledgeAcceptance.ToString()] = UnityEngine.Random.Range(0, 1000);
     }
 }

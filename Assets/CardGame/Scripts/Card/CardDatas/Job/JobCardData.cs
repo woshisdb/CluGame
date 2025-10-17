@@ -14,22 +14,36 @@ public interface IJobEffect
 /// </summary>
 public class JobCardData: CardData
 {
+    public string ID;
     /// <summary>
     /// 工作的描述信息
     /// </summary>
-    JobInfo jobInfo;
+    public JobInfo jobInfo;
     /// <summary>
     /// 工作的效果
     /// </summary>
     public List<IJobEffect> effects;
+
+    public JobCardData() : base()
+    {
+        viewType = ViewType.JobCard;
+    }
     public override CardEnum GetCardType()
     {
-        throw new System.NotImplementedException();
+        return CardEnum.JobCard;
     }
 
     public override CardModel CreateModel()
     {
         throw new System.NotImplementedException();
+    }
+    /// <summary>
+    /// 创建具体的工作
+    /// </summary>
+    /// <returns></returns>
+    public CardModel CreateSpecialJob(IHaveJob haveJober)
+    {
+        return new JobCardModel(haveJober,this);
     }
 }
 
@@ -38,10 +52,18 @@ public class JobCardData: CardData
 /// </summary>
 public class JobCardModel : CardModel
 {
+    [SerializeField]
+    public override CardData cardData
+    {
+        get
+        {
+            return GameFrameWork.Instance.gameConfig.JobCardDatas[jobId];
+        }
+    }
     /// <summary>
     /// 工作提供者
     /// </summary>
-    public IHaveJob HaveJob;
+    public IHaveJob jobProvider;
     /// <summary>
     /// 工作数目
     /// </summary>
@@ -51,6 +73,7 @@ public class JobCardModel : CardModel
     /// </summary>
     public List<INeedJob> needJobs;
 
+    public string jobId;
     public List<IJobEffect> jobEffects
     {
         get
@@ -59,18 +82,16 @@ public class JobCardModel : CardModel
         }
     }
 
-    public JobCardModel(CardEnum cardEnum) : base(cardEnum)
+    public JobCardModel(IHaveJob jobProvider,CardData cardData) : base(cardData)
     {
+        jobId = ((JobCardData)cardData).ID;
+        this.jobProvider = jobProvider;
         needJobs = new List<INeedJob>();
+        jobProvider.AddJob(this);
     }
 
-    public JobCardModel(CardData cardData) : base(cardData)
+    public JobInfo GetJobInfo()
     {
-        needJobs = new List<INeedJob>();
-    }
-
-    public virtual void Effect()
-    {
-        
+        return ((JobCardData)cardData).jobInfo;
     }
 }

@@ -11,7 +11,7 @@ public class CardModel:IModel
     public bool atLeastOne;
     public Vector3 tablePos;
     [SerializeField]
-    public CardData cardData
+    public virtual CardData cardData
     {
         get {
             return GameFrameWork.Instance.gameConfig.CardMap[cardEnum];

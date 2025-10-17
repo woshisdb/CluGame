@@ -17,18 +17,48 @@ public interface INeedJob : ICardFlag
     /// </summary>
     /// <returns></returns>
     string JobAim();
+    /// <summary>
+    /// 工作的数据信息
+    /// </summary>
+    /// <returns></returns>
+    Dictionary<string, int> GetJobDic();
+    IHaveJob GetJob();
 }
-/// <summary>
-/// 工作的目标
-/// </summary>
-public class JobAim
+
+public static class IHaveJobEffectExtensions
 {
-    
-}
-/// <summary>
-/// 工作的得分目标
-/// </summary>
-public class JobScore
-{
-    
+    public static string getScoreText(this INeedJob jober)
+    {
+        var txt =jober.getScoreText();
+        return txt;
+    }
+    /// <summary>
+    /// 降低分数
+    /// </summary>
+    /// <param name="jober"></param>
+    /// <param name="score"></param>
+    public static void ReduceScore(this INeedJob jober, int score)
+    {
+        var str = jober.getScoreText();
+        var ret = jober.GetJobDic();
+        ret[str] = ret[str] - score;
+    }
+    /// <summary>
+    /// 增加分数
+    /// </summary>
+    /// <param name="jober"></param>
+    /// <param name="score"></param>
+    public static void AddScore(this INeedJob jober, int score)
+    {
+        var str = jober.getScoreText();
+        var ret = jober.GetJobDic();
+        ret[str] = ret[str] + score;
+    }
+
+    public static int GetScore(this INeedJob jober)
+    {
+        var str = jober.getScoreText();
+        var ret = jober.GetJobDic();
+        return ret[str];
+    }
 }

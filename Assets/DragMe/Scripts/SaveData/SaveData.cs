@@ -12,7 +12,11 @@ public class SaveFile
     /// <summary>
     /// 工作的职业
     /// </summary>
-    public List<JobRecordCardModel> jobRecords;
+    public List<JobCardModel> jobs;
+    /// <summary>
+    /// npc角色
+    /// </summary>
+    public List<NpcCardModel> npcs;
 }
 
 [CreateAssetMenu(fileName = "newSaveData", menuName = "SaveData/newSaveData")]

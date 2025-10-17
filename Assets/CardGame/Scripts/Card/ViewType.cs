@@ -28,5 +28,6 @@ public enum ViewType
     /// <summary>
     /// 工作记录
     /// </summary>
-    JobRecordCard
+    JobCard,
+    JobRecordCard,
 }
