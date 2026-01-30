@@ -15,13 +15,17 @@ public class DraggableCard : MonoBehaviour
     [Header("交互配置")]
     [Tooltip("区分点击和拖拽的像素阈值")]
     public float clickThreshold = 5f;
-    [Tooltip("引用主相机（默认自动获取）")]
-    public Camera mainCamera;
+    public Camera mainCamera{
+        get
+        {
+            return Camera.main;
+        }}
 
     [Header("状态调试")]
     [SerializeField] private bool isDragging;
     [SerializeField] private bool isTouching;
 
+    [Header("设置Y轴的位置")] public float yDragPos;
     // 事件定义
     /// <summary>
     /// 单击事件（非拖拽状态下抬起鼠标时触发）
@@ -63,15 +67,17 @@ public class DraggableCard : MonoBehaviour
     private Quaternion originalRotation;
     private Vector2 firstTouchPos;
 
+    public void SetFirstTouchPos(Vector2 pos)
+    {
+        firstTouchPos = pos;
+    }
     private void Start()
     {
-        if (mainCamera == null)
-            mainCamera = Camera.main;
         originalPosition = transform.position;
         originalRotation = transform.rotation;
     }
 
-    private void OnMouseDown()
+    public void OnMouseDown()
     {
         transform.parent = null;
         isTouching = true;
@@ -82,7 +88,7 @@ public class DraggableCard : MonoBehaviour
         OnCardTouch?.Invoke(touchArgs);
     }
 
-    private void OnMouseDrag()
+    public void OnMouseDrag()
     {
         // 计算鼠标移动距离，超过阈值判定为拖拽
         float moveDistance = Vector2.Distance(Input.mousePosition, firstTouchPos);
@@ -100,15 +106,14 @@ public class DraggableCard : MonoBehaviour
             if (dragPlane.Raycast(ray, out float distance))
             {
                 Vector3 newPos = ray.GetPoint(distance);
-                transform.position = newPos+new Vector3(0,1,0);
-
+                transform.position = new Vector3(newPos.x,yDragPos,newPos.z);
                 var moveArgs = new CardDragEventArgs(this, Input.mousePosition, newPos);
                 OnCardMove?.Invoke(moveArgs);
             }
         }
     }
 
-    private void OnMouseUp()
+    public void OnMouseUp()
     {
         if (isDragging)
         {

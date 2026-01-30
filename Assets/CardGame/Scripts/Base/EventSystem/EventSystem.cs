@@ -18,13 +18,13 @@ public interface IEvent
 
 public class EventManager : Singleton<EventManager>
 {
-    // È«¾ÖÊÂ¼þ¼àÌýÆ÷×Öµä
+    // È«ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½
     private Dictionary<Type, Action<IEvent>> globalEventDictionary;
 
-    // ÌØ¶¨·¢ËÍÕßµÄÊÂ¼þ¼àÌýÆ÷×Öµä
+    // ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½
     private Dictionary<ISendEvent, Dictionary<Type, Action<IEvent>>> specificEventDictionary;
 
-    // Î¯ÍÐÓ³Éä»º´æ£¨ÓÃÓÚÕýÈ·×¢Ïú£©
+    // Î¯ï¿½ï¿½Ó³ï¿½ä»ºï¿½æ£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·×¢ï¿½ï¿½ï¿½ï¿½
     private Dictionary<Delegate, Action<IEvent>> globalListenerMap = new Dictionary<Delegate, Action<IEvent>>();
     private Dictionary<ISendEvent, Dictionary<Delegate, Action<IEvent>>> specificListenerMap = new Dictionary<ISendEvent, Dictionary<Delegate, Action<IEvent>>>();
 
@@ -34,7 +34,7 @@ public class EventManager : Singleton<EventManager>
         specificEventDictionary = new Dictionary<ISendEvent, Dictionary<Type, Action<IEvent>>>();
     }
 
-    // ×¢²áÈ«¾ÖÊÂ¼þ¼àÌýÆ÷
+    // ×¢ï¿½ï¿½È«ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public void Register<T>(Action<T> listener) where T : struct, IEvent
     {
         var eventType = typeof(T);
@@ -51,7 +51,7 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    // È¡ÏûÈ«¾ÖÊÂ¼þ¼àÌýÆ÷
+    // È¡ï¿½ï¿½È«ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public void Unregister<T>(Action<T> listener) where T : struct, IEvent
     {
         var eventType = typeof(T);
@@ -70,7 +70,7 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    // ×¢²áÌØ¶¨·¢ËÍÕßµÄÊÂ¼þ¼àÌýÆ÷
+    // ×¢ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public void Register<T>(ISendEvent sender, Action<T> listener) where T : struct, IEvent
     {
         var eventType = typeof(T);
@@ -96,7 +96,7 @@ public class EventManager : Singleton<EventManager>
         listenerMap[listener] = wrapper;
     }
 
-    // È¡ÏûÌØ¶¨·¢ËÍÕßµÄÊÂ¼þ¼àÌýÆ÷
+    // È¡ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public void Unregister<T>(ISendEvent sender, Action<T> listener) where T : struct, IEvent
     {
         var eventType = typeof(T);
@@ -120,7 +120,7 @@ public class EventManager : Singleton<EventManager>
                 listenerMap.Remove(listener);
             }
 
-            // ÇåÀí¿Õ×Öµä
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½
             if (listenerMap.Count == 0)
                 specificListenerMap.Remove(sender);
             if (senderDict.Count == 0)
@@ -128,18 +128,18 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    // ´¥·¢ÊÂ¼þ£¨°üº¬È«¾ÖÓë·¢ËÍÕß£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ë·¢ï¿½ï¿½ï¿½ß£ï¿½
     public void TriggerEvent<T>(ISendEvent sender, T eventToSend) where T : struct, IEvent
     {
         var eventType = typeof(T);
 
-        // ´¥·¢È«¾ÖÊÂ¼þ
+        // ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½Â¼ï¿½
         if (globalEventDictionary.TryGetValue(eventType, out var globalHandler))
         {
             globalHandler?.Invoke(eventToSend);
         }
 
-        // ´¥·¢ÌØ¶¨·¢ËÍÕßÊÂ¼þ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         if (specificEventDictionary.TryGetValue(sender, out var senderDict))
         {
             if (senderDict.TryGetValue(eventType, out var senderHandler))

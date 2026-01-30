@@ -3,33 +3,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class CardLineData
-{
-    public string action;
-    public CardEnum from;
-    public CardEnum to;
-    public CardLineData(CardEnum from,CardEnum to,string action)
-    {
-        this.from = from;
-        this.to = to;
-        this.action = action;
-    }
-}
-
 public class CardLineMgr
 {
     CardModel cardModel;
-    public List<CardLineData> cardLines;
+    private CardView CardView;
+    
     public Dictionary<CardLineData,ObjectConnector> connectors;
-    public CardLineMgr(CardModel cardModel)
+    public CardLineMgr(CardModel cardModel,CardView CardView)
     {
+        this.CardView = CardView;
         this.cardModel = cardModel;
-        cardLines = new List<CardLineData>();
         connectors = new Dictionary<CardLineData, ObjectConnector>();
-        cardModel.InitCardLineMgr(this);
     }
-    public void AddCardLine(CardLineData lineData)
+
+    public bool IsLineEnable()
     {
-        cardLines.Add(lineData);
+        if (cardModel!=null&&cardModel.IsSatComponent<DrawLineComponent>())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public List<CardLineData> GetCardLineData()
+    {
+        return cardModel.GetComponent<DrawLineComponent>().CardLineDatas;
+    }
+    public void CreateLine(CardLineData data)
+    {
+        var fromObj = GameFrameWork.instance.cardsManager.FindCardByCfg(data.from);
+        var toObj = GameFrameWork.instance.cardsManager.FindCardByCfg(data.to);
+        if(fromObj && toObj)
+        {
+            var lineTempate = GameFrameWork.Instance.gameConfig.lineTemplate;
+            var obj = GameObject.Instantiate(lineTempate);
+            var cmp = obj.GetComponent<ObjectConnector>();
+            cmp.Bind(fromObj.transform, toObj.transform, data.action);
+            cmp.transform.SetParent(CardView.transform);
+            connectors[data] = cmp;
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum UIEnum
 {
@@ -14,13 +15,13 @@ public enum UIEnum
 
 public class UIManager : SerializedMonoBehaviour
 {
+    public PassStageAnim PassStageAnim;
     public InspectorUI inspector;
-    public GameObject kvItemUI;
-    public GameObject tableItemUI;
-    public GameObject buttonUI;
-    public GameObject cellUI;
-    public GameObject mapUI;
+    public GameHandUI GameHandUI;
+    public BehavePoint BehavePoint;
+    public Button ButtonUI;
     public Dictionary<UIEnum,GameObject> map;
+    public ObjectDetailPanel ObjectDetailPanel;
     public void ToSceneUI(UIEnum uienum)
     {
         foreach (var kv in map)
@@ -42,5 +43,23 @@ public class UIManager : SerializedMonoBehaviour
         //    //cellUI.SetActive(false);
         //    //mapUI.SetActive(true);
         //}
+    }
+
+    public void ShowPlayerUI()
+    {
+        BehavePoint.gameObject.SetActive(true);
+        GameHandUI.gameObject.SetActive(true);
+        inspector.gameObject.SetActive(true);
+        // PassStageAnim.gameObject.SetActive(true);
+        ButtonUI.gameObject.SetActive(true);
+    }
+
+    public void HidePlayerUI()
+    {
+        BehavePoint.gameObject.SetActive(false);
+        GameHandUI.gameObject.SetActive(false);
+        inspector.gameObject.SetActive(false);
+        // PassStageAnim.gameObject.SetActive(false);
+        ButtonUI.gameObject.SetActive(false);
     }
 }

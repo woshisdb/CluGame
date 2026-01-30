@@ -109,5 +109,5 @@ public class CardSlot : MonoBehaviour
     {
         return transform.position + cardOffset;
     }
-
+    
 }

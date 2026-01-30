@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 
 using System;
-using System.Reflection;
+using System.Reflection;using Sirenix.OdinInspector;
+using UnityEngine;
 
 public static class InterfaceHelper
 {
@@ -35,8 +36,57 @@ public static class InterfaceHelper
 }
 
 
+public interface CardDataDic<T, F> 
+    where T : Enum
+    where F : class
+{
+    /// <summary>
+    /// 获取字符串
+    /// </summary>
+    /// <returns></returns>
+    string GetResStr();
+
+    Dictionary<T, F> GetDic();
+}
+
+public interface CardSObj<T>
+where T:Enum
+{
+    T GetEnum();
+}
+
+public static class CardDataDicExt
+{
+    public static void Init<T, F>(this CardDataDic<T, F> dic,ref Dictionary<T,F> map)
+        where T : Enum
+        where F : class,CardSObj<T>
+    {
+        map = new Dictionary<T, F>();
+        // F[] allConfigs = Resources.LoadAll<F>(dic.GetResStr());
+        // foreach (var x in allConfigs)
+        // {
+        //     map[x.GetEnum()] = x;
+        // }
+    }
+}
+
 public abstract class CardData
 {
+    public virtual string Title
+    {
+        get
+        {
+            return title;
+        }
+    }
+
+    public virtual string Description
+    {
+        get
+        {
+            return description;
+        }
+    }
     public string title;
     public string description;
     public ViewType viewType;
@@ -51,23 +101,24 @@ public abstract class CardData
         cardFlags = new HashSet<CardFlag>();
     }
     public abstract CardEnum GetCardType();
-    public abstract CardModel CreateModel();
+    public abstract CardModel CreateModel(CardCreateInfo CardCreateInfo);
 
     public bool hasFlag(CardFlag cardFlag)
     {
         return cardFlags.Contains(cardFlag);
     }
 
-    public void InitCardFlags(params Type[] types)
-    {
-        foreach (var t in types)
-        {
-            var enums = InterfaceHelper.GetBindEnums<CardFlag>(t);
-            cardFlags.UnionWith(enums);
-        }
-    }
     public virtual void InitCardLineMgr(CardLineMgr cardLineMgr)
     {
 
+    }
+    public virtual CardModel CreateCardModelByInfo(CardCreateInfo data)
+    {
+        return null;
+    }
+
+    public virtual void AfterCreate(CardModel cardModel)
+    {
+        
     }
 }

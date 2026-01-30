@@ -18,7 +18,8 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     public Transform slotRoot;
     public Transform cardRoot;
     public TextMeshPro timeRemain;
-
+    [Header("放置的位置")]
+    public float yPlacePos;
     public void BindModel(IModel model)
     {
         this.taskPanelModel = (TaskPanelModel)model;
@@ -47,7 +48,7 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     public void OnTaskPanelPut()
     {
         Debug.Log("OnTaskPanelPut");
-        this.transform.localPosition = new Vector3(this.transform.position.x,-9.5f, this.transform.position.z);
+        this.transform.localPosition = new Vector3(this.transform.position.x,yPlacePos, this.transform.position.z);
     }
     public IModel GetModel()
     {
@@ -177,6 +178,15 @@ public class TaskPanelView : SerializedMonoBehaviour, IView
     {
         var cardRequire = slotMap[slot];
         taskPanelModel.RemoveCard(cardRequire);
+    }
+    
+    public void OnSlotTouch(Slot slot)
+    {
+        // slotMap[slot]
+        taskPanelModel.OnSlotTouch(slotMap[slot], (cardModel) =>
+        {
+            slot.TryAddCardByCardModel(cardModel);
+        });
     }
     public void Release()
     {

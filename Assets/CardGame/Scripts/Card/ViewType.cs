@@ -4,7 +4,10 @@ using UnityEngine;
 
 public enum ViewType
 {
-    D1,
+    /// <summary>
+    /// 属性卡
+    /// </summary>
+    Property,
     /// <summary>
     /// 场景卡
     /// </summary>
@@ -30,4 +33,8 @@ public enum ViewType
     /// </summary>
     JobCard,
     JobRecordCard,
+    /// <summary>
+    /// 物品卡
+    /// </summary>
+    ObjectCard,
 }

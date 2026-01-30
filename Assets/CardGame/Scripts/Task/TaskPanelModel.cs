@@ -33,6 +33,10 @@ public class TaskPanelModel:IModel
     }
     public void AddCard(string cardRequire,CardModel cardModel)
     {
+        if (cardsMap.ContainsKey(cardRequire))
+        {
+            cardsMap.Remove(cardRequire);
+        }
         cardsMap.Add(cardRequire, cardModel);
     }
     public void RemoveCard(string cardRequire)
@@ -45,6 +49,11 @@ public class TaskPanelModel:IModel
         textList.Clear();
         textList = dic;
         GameFrameWork.Instance.viewModelManager.RefreshView(this);
+    }
+
+    public bool IsSatCard(string name)
+    {
+        return TryFindCard(name) != null;
     }
 	public CardModel TryFindCard(string cardRequire)
 	{
@@ -158,5 +167,23 @@ public class TaskPanelModel:IModel
                 GameFrameWork.Instance.AddCardByCardModel(card, new Vector3(0, 0, 0));
             }
         }
+    }
+    /// <summary>
+    /// 结束任务
+    /// </summary>
+    public void EndTask()
+    {
+        OnEndTask();
+        GameFrameWork.Instance.taskManager.RemoveTask(this);
+    }
+
+    public void OnEndTask()
+    {
+        
+    }
+
+    public void OnSlotTouch(string slotName,Action<CardModel> action)
+    {
+        exeNode.taskConfigModules.OnSlotTouch(this,slotName,action);
     }
 }

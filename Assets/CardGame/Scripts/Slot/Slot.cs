@@ -16,7 +16,7 @@ public class Slot : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        
     }
 
     // Update is called once per frame
@@ -80,5 +80,30 @@ public class Slot : MonoBehaviour
             //taskPanelView.StateTransition();
             GameFrameWork.Instance.viewModelManager.RefreshView(taskPanelView.taskPanelModel);
         }
+    }
+    /// <summary>
+    /// 尝试添加卡片通过CardModel
+    /// </summary>
+    /// <param name="cardModel"></param>
+    public void TryAddCardByCardModel(CardModel cardModel)
+    {
+        if (taskPanelView.CanAddCard(this, cardModel))
+        {
+            var card = GameFrameWork.Instance.AddCardByCardModel(cardModel,new Vector3(0,0,0), true);
+            GetComponent<CardSlot>().TryPlaceCard(card.GetComponent<DraggableCard>());
+            var evt = new OnCardPlaceArgs();
+            evt.Card = card.GetComponent<CardView>();
+            evt.Card.SetCustomGrabAction(() =>
+            {
+                GameObject.Destroy(card);
+            });
+            OnCardTryPlaced(evt);
+        }
+    }
+    
+    public void OnClickSlot()
+    {
+        taskPanelView.OnSlotTouch(this);
+        Debug.Log("OnClickSlot");
     }
 }

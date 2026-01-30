@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.UI;
 
 public struct RefreshViewEvent : IEvent
 {
@@ -44,6 +45,12 @@ public class InspectorUI : MonoBehaviour,IRegisterEvent
         {
             GenItems(item, listUI);
         }
+        RefreshLayout(listUI.content.GetComponent<RectTransform>());
+    }
+    public static void RefreshLayout(RectTransform rect)
+    {
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
     }
     public void ClearUI()
     {
@@ -57,6 +64,7 @@ public class InspectorUI : MonoBehaviour,IRegisterEvent
             var comp = go.GetComponent<KVItemUI>();
             comp.BindObj(item);
             listUI.Add(go);
+            RefreshLayout(go.GetComponent<RectTransform>());
         }
         else if (item.GetType() == typeof(ButtonBinder))
         {
@@ -64,6 +72,7 @@ public class InspectorUI : MonoBehaviour,IRegisterEvent
             var comp = go.GetComponent<ButtonUI>();
             comp.BindObj(item);
             listUI.Add(go);
+            RefreshLayout(go.GetComponent<RectTransform>());
         }
         else
         {
@@ -71,6 +80,7 @@ public class InspectorUI : MonoBehaviour,IRegisterEvent
             var comp = go.GetComponent<TableItemUI>();
             comp.BindObj((TableItemBinder)item);
             listUI.Add(go);
+            RefreshLayout(go.GetComponent<RectTransform>());
         }
     }
 }

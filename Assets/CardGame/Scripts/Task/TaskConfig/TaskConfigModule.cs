@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,11 @@ public class TaskConfigModule
 {
     public string title;
     public string description;
+
+    public virtual void OnSlotTouch(TaskPanelModel task,string slotName,Action<CardModel> action)
+    {
+        
+    }
 }
 /// <summary>
 /// 任务成功，允许点击
@@ -17,7 +23,6 @@ public interface TaskConfig_OnSucc
 {
     bool CanClickChange(TaskPanelModel task);
     void ClickChange(TaskPanelModel task);
-    NextConfigModule getSucc();
     bool CanPut(string req,CardModel card);
     Dictionary<string, CardConfig> NeedCards();
 }
@@ -40,7 +45,6 @@ public interface TaskConfig_OnChange
     /// </summary>
     /// <returns></returns>
     bool WhenCardChange(TaskPanelModel task);
-    NextConfigModule getChange();
 }
 
 /// <summary>
@@ -274,5 +278,100 @@ public class NeedCard_TaskConfigModule:TaskConfigModule, TaskConfig_OnChange, Ta
             return false;
         }
     }
+
 }
 
+public class NeedCard_FuncConfigModule:TaskConfigModule, TaskConfig_OnChange, TaskConfig_OnSucc
+{
+    /// <summary>
+    /// 有哪些卡需要转移
+    /// </summary>
+    public Dictionary<string, CardConfig> needCards;
+    /// <summary>
+    /// 点击继续后的行为
+    /// </summary>
+    public NextConfigModule onSucc;
+    /// <summary>
+    /// 状态切换后的行为
+    /// </summary>
+    public Func<TaskPanelModel,bool> onChange;
+    /// <summary>
+    /// 是否点击变化
+    /// </summary>
+    public Func<TaskPanelModel, bool> canClickChange;
+
+    public Action<TaskPanelModel> clickChange;
+    public NeedCard_FuncConfigModule(string title,string description,Dictionary<string, (Func<CardModel,bool>,Func<TaskPanelModel,List<CardModel>>)> cardConfigs) : base()
+    {
+        this.title = title;
+        this.description = description;
+        needCards = new Dictionary<string, CardConfig>();
+        foreach (var func in cardConfigs)
+        {
+            needCards.Add(func.Key,new CardFuncConfig(func.Value.Item1,func.Value.Item2));
+        }
+    }
+    /// <summary>
+    /// 当前卡片改变的话
+    /// </summary>
+    /// <param name="onCardChange"></param>
+    /// <returns></returns>
+    public NeedCard_FuncConfigModule SetOnCardChange(Func<TaskPanelModel,bool> onCardChange)
+    {
+        this.onChange = onCardChange;
+        return this;
+    }
+    public bool WhenCardChange(TaskPanelModel task)
+    {
+        if (onChange==null)
+        {
+            return false;
+        }
+        return onChange(task);
+    }
+    
+    public NeedCard_FuncConfigModule SetClickChange(Func<TaskPanelModel,bool> canClickChange,Action<TaskPanelModel> clickChange)
+    {
+        this.canClickChange = canClickChange;
+        this.clickChange = clickChange;
+        return this;
+    }
+    public bool CanClickChange(TaskPanelModel task)
+    {
+        return canClickChange(task);
+    }
+
+    public void ClickChange(TaskPanelModel task)
+    {
+        clickChange(task);
+    }
+    public bool CanPut(string req, CardModel card)
+    {
+        if (needCards.ContainsKey(req))
+        {
+            return needCards[req].isSat(card);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public Dictionary<string, CardConfig> NeedCards()
+    {
+        return needCards;
+    }
+    public override void OnSlotTouch(TaskPanelModel task,string slotName,Action<CardModel> action)
+    {
+        var needCard = ((CardFuncConfig)needCards[slotName]).canSelCards(task);
+        foreach(var x in needCard)
+        {
+            x.SetOnClick(() =>
+            {
+                action?.Invoke(x);
+                GameFrameWork.Instance.gameHandUI.ClearCards();
+            });
+        }
+        GameFrameWork.Instance.gameHandUI.SetCards(needCard);
+    }
+}

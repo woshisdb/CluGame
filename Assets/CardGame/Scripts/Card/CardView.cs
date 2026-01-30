@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Studio.OverOne.DragMe.Components;
@@ -16,24 +17,39 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     public TextMeshPro countDown;
     public Slot slot;
     public CardLineMgr lineMgr;
+    public Action customGrabAction;
     public bool justCkeck { get { return cardModel.atLeastOne; } }
     public Vector3 startPos;
     /// <summary>
     /// 纯SlotCard
     /// </summary>
     public bool pureSlotCard;
+
+    public void Awake()
+    {
+    }
+
+    public void Start()
+    {
+    }
+
     public void BindModel(IModel model)
     {
         this.cardModel = (CardModel)model;
         Refresh();
         this.onBindView();
         if(!pureSlotCard)
-        lineMgr = new CardLineMgr(cardModel);
+        lineMgr = new CardLineMgr(cardModel,this);
     }
 
     public IModel GetModel()
     {
         return cardModel;
+    }
+
+    public void SetCustomGrabAction(Action action)
+    {
+        this.customGrabAction = action;
     }
     public void onGrab()
     {
@@ -54,20 +70,16 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
                 this.slot = null;
             }
         }
+        customGrabAction?.Invoke();
     }
     public virtual void Refresh()
     {
         if (cardModel!=null)
         {
-            this.title.text = cardModel.cardData.title;
-            this.description.text = cardModel.cardData.description;
+            this.title.text = cardModel.GetTitle();
+            this.description.text = cardModel.GetDescription();
             this.countDown.text = "倒计时";
         }
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
     }
 
     // Update is called once per frame
@@ -79,6 +91,11 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
         {
             Refresh();
         }
+    }
+    [Button]
+    public void TouchIt(Vector3 pos)
+    {
+        transform.SetLocalPositionAndRotation(pos, Quaternion.identity);
     }
     public virtual void WhenCanSuccPlace(CardDragEventArgs placedEvent)
     {
@@ -97,6 +114,12 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
                 {
                     transform.localPosition = startPos;
                     GameObject.Destroy(gameObject);
+                }
+                else
+                {
+                    transform.localPosition = startPos;
+                    placedEvent.TargetSlot.TryPlaceCard(placedEvent.Card,true);
+                    WhenCanSuccPlace(placedEvent);
                 }
             }
             else
@@ -158,30 +181,19 @@ public class CardView : SerializedMonoBehaviour,IView,IUISelector, ISendEvent
     }
     public void UpdateLine()
     {
-        foreach(var item in lineMgr.cardLines)
+        if (lineMgr.IsLineEnable())
         {
-            if (lineMgr.connectors.ContainsKey(item)&& lineMgr.connectors[item]==null)
+            foreach(var item in lineMgr.GetCardLineData())
             {
-                lineMgr.connectors.Remove(item);
+                if (lineMgr.connectors.ContainsKey(item)&& lineMgr.connectors[item]==null)
+                {
+                    lineMgr.connectors.Remove(item);
+                }
+                if(!lineMgr.connectors.ContainsKey(item))
+                {
+                    lineMgr.CreateLine(item);
+                }
             }
-            if(!lineMgr.connectors.ContainsKey(item))
-            {
-                CreateLine(item);
-            }
-        }
-    }
-    public void CreateLine(CardLineData data)
-    {
-        var fromObj = GameFrameWork.instance.cardsManager.FindCardByEnum(data.from);
-        var toObj = GameFrameWork.instance.cardsManager.FindCardByEnum(data.to);
-        if(fromObj && toObj)
-        {
-            var lineTempate = GameFrameWork.Instance.gameConfig.lineTemplate;
-            var obj = GameObject.Instantiate(lineTempate);
-            var cmp = obj.GetComponent<ObjectConnector>();
-            cmp.Bind(fromObj.transform, toObj.transform, data.action);
-            cmp.transform.SetParent(transform);
-            lineMgr.connectors[data] = cmp;
         }
     }
 }

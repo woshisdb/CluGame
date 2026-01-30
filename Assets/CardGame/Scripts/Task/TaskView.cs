@@ -26,6 +26,7 @@ public class TaskView : SerializedMonoBehaviour,IView
     public void OnStartButtonClick()
     {
         GameFrameWork.Instance.taskPanel.SetActive(true);
+        GameFrameWork.Instance.taskPanel.transform.position = new Vector3(transform.position.x,1.41f,transform.position.z);
         GameFrameWork.Instance.taskPanel.GetComponent<TaskPanelView>().BindModel(model);
     }
 

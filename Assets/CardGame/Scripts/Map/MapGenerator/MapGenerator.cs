@@ -1,0 +1,13 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class MapGenerator : MonoBehaviour
+{
+    public MapGeneratorCfg mapGeneratorCfg;
+
+    public void GenerateMap()
+    {
+        
+    }
+}
