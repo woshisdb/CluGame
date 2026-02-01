@@ -491,14 +491,17 @@ WorldStorySegment行为段必须包含：
         Save("模组精简",str);
         Debug.Log("PDF 文本规范化整理完成（分段模式）");
     }
-    [Button]
+    [Button("过滤信息")]
     public async Task FilterGptText()
     {
         Dictionary<string,string> infoDictionary = new Dictionary<string, string>();
         var rawText = Load("模组精简");
         var chunks = GptLongTextProcessor.SplitText(rawText);
+        int index = 1;
         foreach (var str in chunks)
         {
+            Debug.Log(index+"/"+chunks.Count+".....");
+            index++;
             var data = await GptFilterInfo(infoDictionary,str);
             foreach (var kv in data.mapInfo)
             {
@@ -518,13 +521,111 @@ WorldStorySegment行为段必须包含：
     {
         public Dictionary<string,string> mapInfo;
     }
-    public async Task<FilterReturn> GptFilterInfo(Dictionary<string,string> infoDictionary,string str)
+    public async Task<FilterReturn> GptFilterInfo(
+        Dictionary<string, string> infoDictionary,
+        string str
+    )
     {
+        var schema = GptSchemaBuilder.BuildSchema(typeof(FilterReturn));
+
+        // 只给 GPT key，不给 value
+        var knownKeysText = infoDictionary.Count == 0
+            ? "（当前尚无已知对象）"
+            : string.Join("、", infoDictionary.Keys);
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    $@"你是一个信息分类提取器，正在对一个【分段 CoC 模组文本】进行解析。
+
+你的任务是：
+从输入文本中提取【被明确描述的对象】及其对应描述，
+并【优先补充到已有对象】中。
+
+【已存在的对象名称列表】
+{knownKeysText}
+
+对象包括但不限于：
+- 人物
+- 怪物
+- 物品
+- 地点
+- 异常存在
+- 仪式、组织、事件
+- 非现实规则
+
+分类规则（非常重要）：
+1. 如果文本内容明显是在描述【已有对象】，必须使用已有 key
+2. 只有在文本中出现【明确的新对象】时，才允许创建新 key
+3. key 必须是对象的名称（简短、稳定）
+4. value 必须是文本中关于该对象的【原始描述整理】
+5. 不总结、不概括、不改写含义
+6. 不生成原文中不存在的对象
+7. 如果本段文本没有可提取对象，返回空 mapInfo
+8. 只输出 JSON，不输出任何解释
+
+返回格式：
+{schema}"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content = str
+            }
+        };
+
+        return await GameFrameWork.Instance.GptSystem
+            .ChatToGPT<FilterReturn>(messages);
     }
 
-    public async Task<string> GptCombineInfo(string obj,string befStr,string newstr)
+
+    public async Task<string> GptCombineInfo(
+        string obj,
+        string befStr,
+        string newStr
+    )
     {
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个文本合并器。
+
+你的任务是：
+将同一个对象的【两段描述】合并为一段完整描述。
+
+规则：
+1. 对象名称：" + obj + @"
+2. 不删除任何有效信息
+3. 不重复相同内容
+4. 保留原有叙事顺序
+5. 不总结、不改写含义
+6. 只整理文本结构
+7. 不添加标题
+8. 不输出解释性内容
+9. 只输出合并后的正文文本"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"【已有描述】
+{befStr}
+
+【新增描述】
+{newStr}"
+            }
+        };
+
+        return await GameFrameWork.Instance.GptSystem
+            .ChatToGPT(messages);
     }
+
     /// <summary>
     /// 保存字符串到本地（Unity 安全路径）
     /// </summary>
