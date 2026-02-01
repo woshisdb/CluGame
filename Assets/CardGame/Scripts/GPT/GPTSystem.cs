@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -96,51 +97,58 @@ public class QwenChatClient
 public class GptChatSession
 {
     /// <summary>
-    /// 当前会话的完整消息历史
+    /// gpt要扮演的角色
     /// </summary>
-    public List<QwenChatMessage> Messages { get; private set; }
+    private string systemPrompt;
+    /// <summary>
+    /// 输出的约束
+    /// </summary>
+    public string constraint;
+    /// <summary>
+    /// 角色对话历史
+    /// </summary>
+    public List<string> chatHistory;
+    // public List<QwenChatMessage> Messages { get; private set; }
 
     public GptChatSession(string systemPrompt)
     {
-        Messages = new List<QwenChatMessage>
-        {
-            new QwenChatMessage
-            {
-                role = "system",
-                content = systemPrompt
-            }
-        };
+        this.systemPrompt = systemPrompt;
     }
 
-    /// <summary>
-    /// 添加玩家输入
-    /// </summary>
-    public void AddUserMessage(string content)
+    public void SetConstrain(string constraint)
     {
-        Messages.Add(new QwenChatMessage
-        {
-            role = "user",
-            content = content
-        });
+        this.constraint = constraint;
     }
-    public void AddSystemMessage(string content)
+    public void AddChatHistory(string name, string context)
     {
-        Messages.Add(new QwenChatMessage
+        chatHistory.Add(name+":"+context);
+    }
+
+    public List<QwenChatMessage> GenerateMessage()
+    {
+        var ret = new List<QwenChatMessage>();
+        ret.Add(new QwenChatMessage
         {
             role = "system",
-            content = content
+            content = systemPrompt
         });
-    }
-    /// <summary>
-    /// 添加 GPT 回复
-    /// </summary>
-    public void AddAssistantMessage(string content)
-    {
-        Messages.Add(new QwenChatMessage
+        var strbuilder = new StringBuilder();
+        foreach (var x in chatHistory)
         {
-            role = "assistant",
-            content = content
+            strbuilder.Append(x);
+            strbuilder.Append("\n");
+        }
+        ret.Add(new QwenChatMessage
+        {
+            role = "user",
+            content = strbuilder.ToString()
         });
+        ret.Add(new QwenChatMessage()
+        {
+            role = "system",
+            content = constraint
+        });
+        return ret;
     }
 }
 
