@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -503,7 +504,7 @@ WorldStorySegment行为段必须包含：
             {
                 if (infoDictionary.ContainsKey(kv.Key))
                 {
-                    infoDictionary[kv.Key]=await GptCombineInfo(infoDictionary[kv.Key],kv.Value);
+                    infoDictionary[kv.Key]=await GptCombineInfo(kv.Key,infoDictionary[kv.Key],kv.Value);
                 }
                 else
                 {
@@ -519,12 +520,10 @@ WorldStorySegment行为段必须包含：
     }
     public async Task<FilterReturn> GptFilterInfo(Dictionary<string,string> infoDictionary,string str)
     {
-        
     }
 
-    public async Task<string> GptCombineInfo(string befStr,string newstr)
+    public async Task<string> GptCombineInfo(string obj,string befStr,string newstr)
     {
-        
     }
     /// <summary>
     /// 保存字符串到本地（Unity 安全路径）
