@@ -168,6 +168,7 @@ public class NpcsCircleLogicModule:SerializedMonoBehaviour,ISendEvent
         }
         else//npc如果不为玩家走ai流程
         {
+            return Task.CompletedTask;
             HidePlayerUI();
             ///填充行动点
             npc.BehavePointComponent.FillPoint();

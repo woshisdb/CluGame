@@ -226,6 +226,7 @@ public class NpcCreateInf
         //-------------------AI的主观思想
         ret.AddComponentCreator(new AIMindComponentCreator());
         ret.AddComponentCreator(new RelationComponentCreator());
+        ret.AddComponentCreator(new ChatComponentCreator());
         var aimindCfg = new AINpcMindCfg();
         aimindCfg.npcInfo = npcInfo;
         aimindCfg.myAimInStory = aim;

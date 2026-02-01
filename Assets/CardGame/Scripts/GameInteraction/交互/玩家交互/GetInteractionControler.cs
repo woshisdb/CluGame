@@ -37,6 +37,7 @@ public static class CardModelExtend
         new GetDetailInteractionControler(),
         new EndWorkInteractionControler(),
         new StartWorkInteractionControler(),
+        new ChatInteractionControler(),
     };
     public static List<GetInteractionControler> infos = new()
     {

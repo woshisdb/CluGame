@@ -18,6 +18,16 @@ public class ChatComponent : BaseComponent, ISupplyTask
     {
         this.other = chat;
     }
+
+    private void EndChat()
+    {
+        other = null;
+    }
+    public static void EndChat(ChatComponent a, ChatComponent b)
+    {
+        a.EndChat();
+        b.EndChat();
+    }
     public SupplyTaskType TaskType => SupplyTaskType.Chat;
 }
 

@@ -255,6 +255,16 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
     {
         var ret = new List<UIItemBinder>();
         ret = this.GetWorldMapUI(GameFrameWork.Instance.playerManager.nowPlayer);
+        foreach (var npc in npcs)
+        {
+            var str = npc;
+            var x = GameFrameWork.Instance.FindNpcById(npc);
+            var npcList= x.GetWorldMapUI(GameFrameWork.Instance.playerManager.nowPlayer);
+            ret.Add(new TableItemBinder(() =>
+            {
+                return str; 
+            },npcList));
+        }
         return ret;
     }
 

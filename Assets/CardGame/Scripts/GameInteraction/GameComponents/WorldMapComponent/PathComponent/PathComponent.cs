@@ -4,8 +4,13 @@ using System.Collections.Generic;
 /// </summary>
 public class PathInfo
 {
+    public SpaceCardConfig SpaceCardConfig;
     public CardModel CardModel;
     public int wasterTime;
+    public void Init()
+    {
+        CardModel = SpaceCardConfig.FindCardModel();
+    }
 }
 public class PathInfoCreator
 {
@@ -17,6 +22,7 @@ public class PathInfoCreator
         var ret = new PathInfo();
         ret.wasterTime = wasterTime;
         ret.CardModel = SpaceCardConfig.FindCardModel();
+        ret.SpaceCardConfig = SpaceCardConfig;
         return ret;
     }
 }
@@ -29,6 +35,14 @@ public class PathComponent:BaseComponent
         foreach (var x in creator.PathInfo)
         {
             PathInfos.Add(x.Create());
+        }
+    }
+
+    public void Init()
+    {
+        foreach (var x in PathInfos)
+        {
+            x.Init();
         }
     }
 }

@@ -12,6 +12,7 @@ public enum InteractionType
     GotoSpace = 10,
     StartWork = 11,
     EndWork = 12,
+    Talk,
 }
 
 public class InteractionCardCreateInfo:CardCreateInfo

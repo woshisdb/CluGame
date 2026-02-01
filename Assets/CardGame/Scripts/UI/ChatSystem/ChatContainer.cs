@@ -19,4 +19,19 @@ public class ChatContainer : MonoBehaviour
     {
         scrollRect.verticalNormalizedPosition = 0;
     }
+
+    /// <summary>
+    /// Clears all chat message nodes under this container.
+    /// </summary>
+    public void ClearAllMessages()
+    {
+        // Destroy all child message nodes from the end to avoid indexing issues
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(transform.GetChild(i).gameObject);
+        }
+
+        Canvas.ForceUpdateCanvases();
+        ScrollToBottom();
+    }
 }

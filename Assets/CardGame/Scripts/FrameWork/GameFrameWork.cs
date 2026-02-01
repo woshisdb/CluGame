@@ -47,6 +47,7 @@ public class GameFrameWork : SerializedMonoBehaviour,ISendEvent,IUISelector
     public GameTimeManager GameTimeManager;
     public WorldMapSystem WorldMapSystem;
     public GameGenerate GameGenerate;
+    public ChatPanel ChatPanel;
     public Dictionary<SpaceEnum, SpaceConfig> spaces;
     
     void Awake()

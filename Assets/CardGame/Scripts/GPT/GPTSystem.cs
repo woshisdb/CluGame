@@ -93,6 +93,57 @@ public class QwenChatClient
 }
 
 
+public class GptChatSession
+{
+    /// <summary>
+    /// 当前会话的完整消息历史
+    /// </summary>
+    public List<QwenChatMessage> Messages { get; private set; }
+
+    public GptChatSession(string systemPrompt)
+    {
+        Messages = new List<QwenChatMessage>
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content = systemPrompt
+            }
+        };
+    }
+
+    /// <summary>
+    /// 添加玩家输入
+    /// </summary>
+    public void AddUserMessage(string content)
+    {
+        Messages.Add(new QwenChatMessage
+        {
+            role = "user",
+            content = content
+        });
+    }
+    public void AddSystemMessage(string content)
+    {
+        Messages.Add(new QwenChatMessage
+        {
+            role = "system",
+            content = content
+        });
+    }
+    /// <summary>
+    /// 添加 GPT 回复
+    /// </summary>
+    public void AddAssistantMessage(string content)
+    {
+        Messages.Add(new QwenChatMessage
+        {
+            role = "assistant",
+            content = content
+        });
+    }
+}
+
 
 public class GPTSystem:SerializedMonoBehaviour
 {
@@ -123,7 +174,6 @@ public class GPTSystem:SerializedMonoBehaviour
     }
     public async Task<T> ChatToGPT<T>(IEnumerable<QwenChatMessage> messages)
     {
-        Debug.Log("sdasdasd");
         var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
         var ret = await gpt.SendChatAsync(messages).ContinueWith(task =>
         {
@@ -139,6 +189,80 @@ public class GPTSystem:SerializedMonoBehaviour
         });
         return ret;
     }
+    /// <summary>
+    /// 新增：多轮对话（有上下文记忆）
+    /// </summary>
+    public async Task<string> ChatInSession(GptChatSession session, string userInput)
+    {
+        // 1️⃣ 添加玩家输入
+        session.AddUserMessage(userInput);
+
+        // 2️⃣ 发送完整历史给 GPT
+        var reply = await gpt.SendChatAsync(session.Messages);
+
+        // 3️⃣ 记录 GPT 回复
+        session.AddAssistantMessage(reply);
+
+        return reply;
+    }
+
+    /// <summary>
+    /// 多轮对话 + JSON 结构化返回（高级用法）
+    /// </summary>
+    public async Task<T> ChatInSession<T>(
+        GptChatSession session,
+        string userInput,
+        string constrain,
+        int maxRetry = 3
+    )
+    {
+        session.AddUserMessage(userInput);
+        session.AddSystemMessage(constrain);
+
+        var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+
+        string lastRaw = null;
+
+        for (int attempt = 0; attempt < maxRetry; attempt++)
+        {
+            var raw = await gpt.SendChatAsync(session.Messages);
+            lastRaw = raw;
+
+            try
+            {
+                var res = JsonConvert.DeserializeObject<T>(raw);
+                if (res != null)
+                {
+                    return res;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(
+                    $"[ChatInSession] JSON 解析失败，第 {attempt + 1} 次尝试\n{e.Message}\n原始输出:\n{raw}"
+                );
+            }
+
+            // ❗关键：纠错提示，作为 system message 注入
+            session.AddSystemMessage(
+                $@"你刚才的输出 **不符合 JSON 格式要求**，无法被程序解析。
+
+要求：
+- 只输出合法 JSON
+- 不要包含任何多余文本
+- 不要解释
+- 不要添加新信息
+- 只修正格式问题
+
+请严格重新输出。"
+            );
+        }
+
+        throw new Exception(
+            $"ChatInSession<{typeof(T).Name}> 在 {maxRetry} 次尝试后仍无法解析。\n最后一次原始输出：\n{lastRaw}"
+        );
+    }
+
 }
 public static class GptSchemaBuilder
 {

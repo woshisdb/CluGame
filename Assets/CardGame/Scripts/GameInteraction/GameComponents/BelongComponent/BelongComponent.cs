@@ -17,6 +17,16 @@ public class BelongComponent:IComponent
         this.CardModel = cardModel;
         this.belong.Value = creator.belong.Value;
     }
+
+    public void Init()
+    {
+        var x = belong.Value;
+        belong.SetNull();
+        if (x!=null)
+        {
+            x.Enter(CardModel as NpcCardModel);
+        }
+    }
 }
 
 public class BelongComponentCreator:IComponentCreator
