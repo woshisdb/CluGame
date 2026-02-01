@@ -168,20 +168,29 @@ public class GPTSystem:SerializedMonoBehaviour
     }
     public async Task<T> ChatToGPT<T>(IEnumerable<QwenChatMessage> messages)
     {
-        var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
-        var ret = await gpt.SendChatAsync(messages).ContinueWith(task =>
+        try
         {
-            if(task.IsCompleted)
+            var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+            var ret = await gpt.SendChatAsync(messages).ContinueWith(task =>
             {
-                var res = JsonConvert.DeserializeObject<T>(task.Result);
-                return res;
-            }
-            else
-            {
-                return default(T);
-            }
-        });
-        return ret;
+                if(task.IsCompleted)
+                {
+                    var res = JsonConvert.DeserializeObject<T>(task.Result);
+                    return res;
+                }
+                else
+                {
+                    return default(T);
+                }
+            });
+            return ret;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"GPT 异常：{e.Message}");
+        }
+        Debug.LogError("GPT 请求多次失败，跳过该段");
+        return default(T);
     }
     /// <summary>
     /// 新增：多轮对话（有上下文记忆）

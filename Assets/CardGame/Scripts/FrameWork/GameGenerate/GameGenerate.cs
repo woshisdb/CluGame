@@ -200,8 +200,9 @@ Schema：
     }
 
     [Button]
-    public async Task<(Dictionary<string, NpcCreateInf>,Dictionary<string, NpcCreateInf>,List<SpaceCreatorRef>)> GetNpcDetails(string coc)
+    public async Task<(Dictionary<string, NpcCreateInf>,Dictionary<string, NpcCreateInf>,List<SpaceCreatorRef>)> GetNpcDetails()
     {
+        var coc = KPSystem.Load("模组精简");
         var res = await GetNpcs(coc);
         var detailRes1 = await CreateNpcInfo(coc,res.Item1);
         var detailRes2 = await CreateNpcInfo(coc, res.Item2);

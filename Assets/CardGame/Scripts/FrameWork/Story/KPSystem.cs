@@ -251,7 +251,7 @@ WorldStorySegment行为段必须包含：
   执行该计划的 NPC（必须来自 NPC 列表）
 
 - aim  
-  在【不超过 {allTime} 天】时，已经完成的最终结果  
+  在【不超过 {allTime} 天】时，想要完成的最终结果  
   ⚠️ aim 描述的是【已发生的世界状态】，而不是“想做什么”  
   必须满足至少一项：
   - 大规模死亡
@@ -288,7 +288,7 @@ WorldStorySegment行为段必须包含：
   - 释放、解除或唤醒某个存在
 - 禁止抽象或模糊动词
 - 每个 step 都必须改变世界状态，并加重局势
-
+- 每个 step 的行为时间都不超过{allTime}天
 - condition  
   描述该 step 发生的时间条件  
   必须以【模组开始时间】为基准，例如：
@@ -490,19 +490,53 @@ WorldStorySegment行为段必须包含：
         Save("模组精简",str);
         Debug.Log("PDF 文本规范化整理完成（分段模式）");
     }
+    [Button]
+    public async Task FilterGptText()
+    {
+        Dictionary<string,string> infoDictionary = new Dictionary<string, string>();
+        var rawText = Load("模组精简");
+        var chunks = GptLongTextProcessor.SplitText(rawText);
+        foreach (var str in chunks)
+        {
+            var data = await GptFilterInfo(infoDictionary,str);
+            foreach (var kv in data.mapInfo)
+            {
+                if (infoDictionary.ContainsKey(kv.Key))
+                {
+                    infoDictionary[kv.Key]=await GptCombineInfo(infoDictionary[kv.Key],kv.Value);
+                }
+                else
+                {
+                    infoDictionary[kv.Key] = kv.Value;
+                }
+            }
+        }
+        return;
+    }
+    public class FilterReturn
+    {
+        public Dictionary<string,string> mapInfo;
+    }
+    public async Task<FilterReturn> GptFilterInfo(Dictionary<string,string> infoDictionary,string str)
+    {
+        
+    }
 
-
+    public async Task<string> GptCombineInfo(string befStr,string newstr)
+    {
+        
+    }
     /// <summary>
     /// 保存字符串到本地（Unity 安全路径）
     /// </summary>
-    public void Save(string fileText,string data)
+    public static void Save(string fileText,string data)
     {
         var filePath = "Assets/Resources/Coc模组/" + fileText+".txt";
         Debug.Log(filePath);
         File.WriteAllText(filePath, data);
     }
 
-    public string Load(string fileText)
+    public static string Load(string fileText)
     {
         var filePath = "Assets/Resources/Coc模组/"+fileText + ".txt";
         Debug.Log(filePath);
@@ -578,11 +612,11 @@ public class GptLongTextProcessor
 
         return finalText.ToString();
     }
-
+    
     /// <summary>
     /// 将长文本按段落切分
     /// </summary>
-    private List<string> SplitText(string text)
+    public static List<string> SplitText(string text)
     {
         var result = new List<string>();
 
@@ -616,7 +650,7 @@ public class GptLongTextProcessor
         return result;
     }
     
-    private int FindSafeCut(string text, int start, int end)
+    public static int FindSafeCut(string text, int start, int end)
     {
         // 从后往前找
         for (int i = end - 1; i > start; i--)
