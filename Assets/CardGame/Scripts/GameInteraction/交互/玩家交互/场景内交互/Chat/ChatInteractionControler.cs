@@ -128,13 +128,17 @@ public class ChatInteractionControler:GetWorldMapInteraction
             var str = Build(me.GetComponent<AIMindComponent>().AINpcMindCfg);
             var constrain = "。【硬性规则 - 不可违背】\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\n你不能输出任何 JSON 以外的内容。" + GptSchemaBuilder.BuildSchema(typeof(ChatContext));
             var GptChatSession = new GptChatSession(str);
+            // 保存初始角色设定到历史记录（以便三段式对话 history 组装）
+            // GptChatSession.AddChatHistory("NPC", str);
             GameFrameWork.Instance.ChatPanel.Init(mec,otherc,new NpcChatListener(async e =>
             {
                 e.panel.submitBtn.gameObject.SetActive(false);
-                // GptChatSession.AddUserMessage(e.Content);
+                // 记录玩家输入到对话历史（不污染主 Messages）
                 var userstr = e.Content;
-                var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(GptChatSession,userstr,constrain);
-                GptChatSession.AddAssistantMessage(evt.message);
+                // GptChatSession.AddChatHistory("Player", userstr);
+                var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(GptChatSession, userstr, constrain);
+                // 将 NPC 的回复记录到历史
+                GptChatSession.AddChatHistory("NPC", evt.message);
                 e.panel.AddMessage(evt.message);
                 e.panel.submitBtn.gameObject.SetActive(true);
             }, () =>

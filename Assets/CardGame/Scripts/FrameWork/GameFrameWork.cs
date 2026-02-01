@@ -49,7 +49,7 @@ public class GameFrameWork : SerializedMonoBehaviour,ISendEvent,IUISelector
     public GameGenerate GameGenerate;
     public ChatPanel ChatPanel;
     public Dictionary<SpaceEnum, SpaceConfig> spaces;
-    
+    public KPSystem KpSystem;
     void Awake()
     {
         cardsManager.Init();

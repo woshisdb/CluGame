@@ -113,6 +113,7 @@ public class GptChatSession
     public GptChatSession(string systemPrompt)
     {
         this.systemPrompt = systemPrompt;
+        chatHistory = new List<string>();
     }
 
     public void SetConstrain(string constraint)
@@ -202,15 +203,13 @@ public class GPTSystem:SerializedMonoBehaviour
     /// </summary>
     public async Task<string> ChatInSession(GptChatSession session, string userInput)
     {
-        // 1️⃣ 添加玩家输入
-        session.AddUserMessage(userInput);
-
-        // 2️⃣ 发送完整历史给 GPT
-        var reply = await gpt.SendChatAsync(session.Messages);
-
-        // 3️⃣ 记录 GPT 回复
-        session.AddAssistantMessage(reply);
-
+        // 使用三段式对话：1) 系统规则 2) 对话历史 3) 输出约束
+        // 将用户输入记录到历史，不修改主 Messages
+        session.AddChatHistory("Player", userInput);
+        var messages = session.GenerateMessage();
+        var reply = await gpt.SendChatAsync(messages);
+        // 将 GPT 回复记录到历史
+        session.AddChatHistory("NPC", reply);
         return reply;
     }
 
@@ -224,16 +223,16 @@ public class GPTSystem:SerializedMonoBehaviour
         int maxRetry = 3
     )
     {
-        session.AddUserMessage(userInput);
-        session.AddSystemMessage(constrain);
-
+        // 使用三段式对话：1) 系统规则 2) 对话历史 3) 输出约束
+        session.AddChatHistory("Player", userInput);
+        session.SetConstrain(constrain);
         var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
-
         string lastRaw = null;
 
         for (int attempt = 0; attempt < maxRetry; attempt++)
         {
-            var raw = await gpt.SendChatAsync(session.Messages);
+            var messages = session.GenerateMessage();
+            var raw = await gpt.SendChatAsync(messages);
             lastRaw = raw;
 
             try
@@ -250,20 +249,6 @@ public class GPTSystem:SerializedMonoBehaviour
                     $"[ChatInSession] JSON 解析失败，第 {attempt + 1} 次尝试\n{e.Message}\n原始输出:\n{raw}"
                 );
             }
-
-            // ❗关键：纠错提示，作为 system message 注入
-            session.AddSystemMessage(
-                $@"你刚才的输出 **不符合 JSON 格式要求**，无法被程序解析。
-
-要求：
-- 只输出合法 JSON
-- 不要包含任何多余文本
-- 不要解释
-- 不要添加新信息
-- 只修正格式问题
-
-请严格重新输出。"
-            );
         }
 
         throw new Exception(
