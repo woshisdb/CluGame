@@ -87,7 +87,8 @@ public class QwenChatClient
 
         if (chatResponse?.output?.text != null)
         {
-            return chatResponse.output.text.Trim();
+            var ret = chatResponse.output.text.Trim();
+            return ret;
         }
         return string.Empty;
     }
@@ -159,27 +160,11 @@ public class GPTSystem:SerializedMonoBehaviour
     QwenChatClient gpt;
     public List<QwenChatMessage> messages;
     [Button]
-    public void Chat()
+    public async Task<string> ChatToGPT(IEnumerable<QwenChatMessage> messages)
     {
-        gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
-        var responses = new List<QwenChatMessage>();
-        responses.Add(new QwenChatMessage
-        {
-            role = "system",
-            content = $"你要扮演一个npc用来与玩家交互,你扮演的npc性格是"
-        });
-        gpt.SendChatAsync(responses).ContinueWith(task =>
-        {
-            if (task.IsCompleted)
-            {
-                Debug.Log(task.Result);
-                // var res = JsonConvert.DeserializeObject<AIResponse>(task.Result);
-            }
-            else
-            {
-                Debug.LogError("Error: " + task.Exception.Message);
-            }
-        });
+        var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+        var ret = await gpt.SendChatAsync(messages);
+        return ret;
     }
     public async Task<T> ChatToGPT<T>(IEnumerable<QwenChatMessage> messages)
     {

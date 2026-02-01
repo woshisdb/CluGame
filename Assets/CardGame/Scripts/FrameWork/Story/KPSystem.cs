@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
+using UglyToad.PdfPig;
 using UnityEngine;
 
 /// <summary>
@@ -95,28 +98,36 @@ public class KPSystem
     public Dictionary<string, List<WorldStorySegment>> npcStory
         = new Dictionary<string, List<WorldStorySegment>>();
 
-    /// <summary>
-    /// 从 CoC 模组文本中生成 NPC 的默认行为时间序列
-    /// </summary>
-    public async Task<Dictionary<string, List<WorldStorySegment>>> GenerateStory(
-        string cocText,
-        List<string> npcs
-    )
-    {
-        var result = await AskGptForWorldStory(cocText, npcs);
-        npcStory = result.npcStory;
-        return npcStory;
-    }
+    public WorldMainStory WorldMainStory;
+
+    public VillainCoreRet VillainCoreRet;
+    // /// <summary>
+    // /// 从 CoC 模组文本中生成 NPC 的默认行为时间序列
+    // /// </summary>
+    // public async Task<Dictionary<string, List<WorldStorySegment>>> GenerateStory(
+    //     string cocText,
+    //     List<string> npcs
+    // )
+    // {
+    //     var result = await AskGptForWorldStory(cocText, npcs);
+    //     npcStory = result.npcStory;
+    //     return npcStory;
+    // }
     [Button]
-    public async Task CreateStory(string cocText,int time)
+    public async Task CreateStory(int time)
     {
+        var cocText = Load("模组精简");
         var npcs = new List<string>();
         var npcsCfg = GameFrameWork.Instance.data.saveFile.ConfigSaveData.mainNpcCfg;
         foreach (var x in npcsCfg)
         {
             npcs.Add(x.name);
         }
-        var ret = await AskGptForVillains(cocText, npcs,time);
+        var ret = await GptLongTextProcessor.Retry<VillainCoreRet>(async () =>
+        {
+            return await AskGptForVillains(cocText, npcs,time);
+        });
+        this.VillainCoreRet = ret;
         Debug.Log(111);
     }
     // =====================================================
@@ -298,8 +309,9 @@ WorldStorySegment行为段必须包含：
     /// 即在玩家介入之前，世界已经发生过的事情
     /// </summary>
     [Button("生成故事的历史背景")]
-    public async Task<string> AskGptForHistory(string cocText)
+    public async Task<string> AskGptForHistory()
     {
+        var cocText = Load("模组精简");
         var messages = new List<QwenChatMessage>
         {
             new QwenChatMessage
@@ -369,8 +381,9 @@ WorldStorySegment行为段必须包含：
             .ChatToGPT<string>(messages);
     }
     [Button("异常字典生成")]
-    public async Task<CocDic> AskGptForCoc(string cocText)
+    public async Task<CocDic> AskGptForCoc()
     {
+        var cocText = Load("模组精简");
         var schema = GptSchemaBuilder.BuildSchema(typeof(CocDic));
 
         var messages = new List<QwenChatMessage>
@@ -450,18 +463,229 @@ WorldStorySegment行为段必须包含：
         return await GameFrameWork.Instance.GptSystem
             .ChatToGPT<CocDic>(messages);
     }
-    // public static string ReadPdfText(string path)
-    // {
-    //     var sb = new StringBuilder();
-    //     using var doc = PdfDocument.Open(path);
-    //
-    //     foreach (var page in doc.GetPages())
-    //     {
-    //         sb.AppendLine(page.Text);
-    //     }
-    //     return sb.ToString();
-    // }
+    [Button]
+    public string ReadPdfText()
+    {
+        var path = "Assets/Resources/Coc模组/模组.pdf";
+        var sb = new StringBuilder();
+        using var doc = PdfDocument.Open(path);
+
+        foreach (var page in doc.GetPages())
+        {
+            sb.AppendLine(page.Text);
+        }
+       var ret = sb.ToString();
+       Save("模组",ret);
+       return ret;
+    }
+    /// <summary>
+    /// 输入 CoC 模组 PDF 解析后的文本，让 GPT 进行规范整理（支持超长文本，不丢细节）
+    /// </summary>
+    [Button]
+    public async Task AskGptText()
+    {
+        var GptLongTextProcessor = new GptLongTextProcessor();
+        var rawText = Load("模组");
+        var str = await GptLongTextProcessor.ProcessLongText(rawText);
+        Save("模组精简",str);
+        Debug.Log("PDF 文本规范化整理完成（分段模式）");
+    }
+
+
+    /// <summary>
+    /// 保存字符串到本地（Unity 安全路径）
+    /// </summary>
+    public void Save(string fileText,string data)
+    {
+        var filePath = "Assets/Resources/Coc模组/" + fileText+".txt";
+        Debug.Log(filePath);
+        File.WriteAllText(filePath, data);
+    }
+
+    public string Load(string fileText)
+    {
+        var filePath = "Assets/Resources/Coc模组/"+fileText + ".txt";
+        Debug.Log(filePath);
+        return File.ReadAllText(filePath);
+    }
 }
+
+public class GptLongTextProcessor
+{
+    /// <summary>
+    /// 单段最大长度（字符数）
+    /// 3000~3500 是稳定区间
+    /// </summary>
+    private const int MAX_CHUNK_LENGTH = 3000;
+
+    /// <summary>
+    /// GPT 用的 system prompt（非常关键，不要随便改）
+    /// </summary>
+    private const string SYSTEM_PROMPT =
+        @"你正在对一个超长 CoC 模组 PDF 解析文本进行【分段规范整理】。
+这是其中的一部分文本。
+
+你的任务是：清理与故事内容无关的信息，并在不改变含义的前提下，使正文更连贯、更易读取。
+
+整理规则：
+1. 可以适度压缩冗余表达，但不得删除任何与剧情、设定、事件、人物、地点、异常、规则相关的细节
+2. 不总结、不概括、不重写文本含义
+3. 不新增原文中不存在的内容
+4. 只允许进行以下修改：
+   - 修复 PDF 断行、分页导致的句子破碎
+   - 删除重复的页眉、页脚、页码、装饰线
+   - 修正明显的 OCR 错字（不改变原意）
+   - 删除多余空行、异常符号
+   - 重新整理段落，使文本更易阅读
+5. 必须删除以下【与故事无关】的信息：
+   - 作者信息、版权声明、出版信息
+   - 目录、索引、页码说明
+   - 使用说明、给主持人的建议（除非其内容属于世界观或剧情）
+   - 排版说明、插图说明、装饰性文本
+6. 保留原有叙事顺序与逻辑结构
+7. 不添加标题或编号
+8. 不使用 Markdown 或任何格式标记
+9. 只输出整理后的正文文本
+10. 输入没有信息，输出也不要有信息
+11. 不要输出任何解释、说明或附加内容";
+
+
+    /// <summary>
+    /// 对外主入口：处理完整长文本
+    /// </summary>
+    public async Task<string> ProcessLongText(string rawText)
+    {
+        if (string.IsNullOrEmpty(rawText))
+            return string.Empty;
+
+        var chunks = SplitText(rawText);
+        var finalText = new StringBuilder();
+
+        Debug.Log($"GPT 长文本分段数：{chunks.Count}");
+
+        for (int i = 0; i < chunks.Count; i++)
+        {
+            Debug.Log($"处理第 {i + 1}/{chunks.Count} 段");
+
+            string cleaned = await Retry(async () =>
+            {
+                return await NormalizeChunk(chunks[i]);
+            });
+
+            finalText.AppendLine(cleaned);
+            finalText.AppendLine();
+        }
+
+        return finalText.ToString();
+    }
+
+    /// <summary>
+    /// 将长文本按段落切分
+    /// </summary>
+    private List<string> SplitText(string text)
+    {
+        var result = new List<string>();
+
+        if (string.IsNullOrEmpty(text))
+            return result;
+
+        int index = 0;
+        int length = text.Length;
+
+        while (index < length)
+        {
+            int remaining = length - index;
+            int take = Math.Min(MAX_CHUNK_LENGTH, remaining);
+
+            // 先假定硬切
+            int cut = index + take;
+
+            // 尝试往前找一个“安全切点”
+            int safeCut = FindSafeCut(text, index, cut);
+
+            if (safeCut <= index)
+            {
+                // 实在找不到，只能硬切
+                safeCut = cut;
+            }
+
+            result.Add(text.Substring(index, safeCut - index));
+            index = safeCut;
+        }
+
+        return result;
+    }
+    
+    private int FindSafeCut(string text, int start, int end)
+    {
+        // 从后往前找
+        for (int i = end - 1; i > start; i--)
+        {
+            char c = text[i];
+
+            // 优先级从高到低
+            if (c == '\n')
+                return i + 1;
+
+            if (c == '。' || c == '！' || c == '？')
+                return i + 1;
+        }
+
+        return -1;
+    }
+
+
+    /// <summary>
+    /// 调 GPT 处理单个文本分段
+    /// </summary>
+    private async Task<string> NormalizeChunk(string chunk)
+    {
+        var messages = new List<QwenChatMessage>
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content = SYSTEM_PROMPT
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content = chunk
+            }
+        };
+
+        return await GameFrameWork.Instance.GptSystem
+            .ChatToGPT(messages);
+    }
+
+    /// <summary>
+    /// 简单可靠的重试机制（防 Cancel / 超时）
+    /// </summary>
+    public static async Task<T> Retry<T>(Func<Task<T>> action, int retryCount = 3)
+    {
+        for (int i = 0; i < retryCount; i++)
+        {
+            try
+            {
+                return await action();
+            }
+            catch (TaskCanceledException)
+            {
+                Debug.LogWarning($"GPT 请求被取消，重试 {i + 1}/{retryCount}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"GPT 异常：{e.Message}，重试 {i + 1}/{retryCount}");
+            }
+
+            await Task.Delay(500);
+        }
+
+        Debug.LogError("GPT 请求多次失败，跳过该段");
+        return default(T);
+    }
+}
+
 /// <summary>
 /// 这是每个异常对象或规则的描述
 /// </summary>
