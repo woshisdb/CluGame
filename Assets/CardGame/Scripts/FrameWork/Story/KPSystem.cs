@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using UglyToad.PdfPig;
 using UnityEngine;
 
@@ -515,6 +516,7 @@ WorldStorySegment行为段必须包含：
                 }
             }
         }
+        Save<Dictionary<string,string>>("数据字典",infoDictionary);
         return;
     }
     public class FilterReturn
@@ -538,34 +540,48 @@ WorldStorySegment行为段必须包含：
             new QwenChatMessage
             {
                 role = "system",
-                content =
-                    $@"你是一个信息分类提取器，正在对一个【分段 CoC 模组文本】进行解析。
-
+                content = $@"你是一个信息分类提取器，正在对一个【分段 CoC 模组文本】进行解析。
 你的任务是：
 从输入文本中提取【被明确描述的对象】及其对应描述，
-并【优先补充到已有对象】中。
+并【优先合并到已有对象】中。
 
 【已存在的对象名称列表】
 {knownKeysText}
 
-对象包括但不限于：
+⚠️ 极其重要的合并规则（必须遵守）：
+
+在创建新 key 之前，你必须执行以下判断流程：
+
+【步骤 1：语义对齐】
+- 判断文本中出现的名称，是否是以下情况之一：
+  - 已有对象的简称
+  - 别称 / 绰号
+  - 指代性称呼（如：母神、她、那个存在）
+  - 翻译差异或表述差异
+- 如果是，则【必须使用已有 key】，禁止新建
+
+【步骤 2：确认新对象】
+- 只有在以下条件同时满足时，才允许创建新 key：
+  1. 该对象在已知列表中找不到语义对应
+  2. 文本中对其有独立、明确、持续的描述
+  3. 它不是已有对象的一部分、阶段、化身或结果
+
+对象范围包括但不限于：
 - 人物
-- 怪物
+- 怪物 / 外神 / 异常存在
 - 物品
 - 地点
-- 异常存在
 - 仪式、组织、事件
 - 非现实规则
 
-分类规则（非常重要）：
-1. 如果文本内容明显是在描述【已有对象】，必须使用已有 key
-2. 只有在文本中出现【明确的新对象】时，才允许创建新 key
-3. key 必须是对象的名称（简短、稳定）
-4. value 必须是文本中关于该对象的【原始描述整理】
-5. 不总结、不概括、不改写含义
-6. 不生成原文中不存在的对象
-7. 如果本段文本没有可提取对象，返回空 mapInfo
-8. 只输出 JSON，不输出任何解释
+输出规则：
+1. key 必须是【最完整、最正式、最稳定】的对象名称  
+   （优先使用已存在的 key）
+2. value 是该段文本中关于该对象的【原始描述整理】
+3. 不总结、不概括、不改写含义
+4. 不生成原文中不存在的对象
+5. 如果本段文本没有可提取对象，返回空 mapInfo
+6. 只输出 JSON，不输出任何解释
 
 返回格式：
 {schema}"
@@ -641,6 +657,20 @@ WorldStorySegment行为段必须包含：
         var filePath = "Assets/Resources/Coc模组/"+fileText + ".txt";
         Debug.Log(filePath);
         return File.ReadAllText(filePath);
+    }
+    public static void Save<T>(string fileName,T data)
+    {
+        var filePath = "Assets/Resources/Coc模组/" +fileName+ ".dat";
+        Debug.Log(filePath);
+        var json = SerializationUtility.SerializeValue<T>(data, DataFormat.JSON);
+        File.WriteAllBytes(filePath, json);
+        Debug.Log("Data Saved: " + json);
+    }
+    public static T Load<T>(string fileName)
+    {
+        var filePath = "Assets/Resources/Coc模组/" +fileName+ ".dat";
+        var json = File.ReadAllBytes(filePath);
+        return SerializationUtility.DeserializeValue<T>(json, DataFormat.JSON);
     }
 }
 

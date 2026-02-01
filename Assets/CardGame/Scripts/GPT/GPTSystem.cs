@@ -166,32 +166,50 @@ public class GPTSystem:SerializedMonoBehaviour
         var ret = await gpt.SendChatAsync(messages);
         return ret;
     }
-    public async Task<T> ChatToGPT<T>(IEnumerable<QwenChatMessage> messages)
+    public async Task<T> ChatToGPT<T>(
+        IEnumerable<QwenChatMessage> messages,
+        int times = 4
+    )
     {
-        try
+        Exception lastException = null;
+
+        for (int i = 0; i < times; i++)
         {
-            var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
-            var ret = await gpt.SendChatAsync(messages).ContinueWith(task =>
+            try
             {
-                if(task.IsCompleted)
+                var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+
+                // ⚠️ 建议在 SendChatAsync 内部支持 CancellationToken
+                var resultText = await gpt.SendChatAsync(messages);
+
+                if (string.IsNullOrWhiteSpace(resultText))
                 {
-                    var res = JsonConvert.DeserializeObject<T>(task.Result);
-                    return res;
+                    throw new Exception("GPT 返回空内容");
                 }
-                else
+
+                // ⚠️ 防止 GPT 偶尔输出非 JSON（你已经遇到过）
+                if (!resultText.TrimStart().StartsWith("{"))
                 {
-                    return default(T);
+                    throw new Exception($"GPT 返回非 JSON 内容：{resultText.Substring(0, Math.Min(30, resultText.Length))}");
                 }
-            });
-            return ret;
+
+                var result = JsonConvert.DeserializeObject<T>(resultText);
+                return result;
+            }
+            catch (Exception e)
+            {
+                lastException = e;
+                Debug.LogWarning($"GPT 第 {i + 1}/{times} 次失败：{e.Message}");
+
+                // 简单退避，避免立刻重试
+                await Task.Delay(500 + i * 300);
+            }
         }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"GPT 异常：{e.Message}");
-        }
-        Debug.LogError("GPT 请求多次失败，跳过该段");
+
+        Debug.LogError($"GPT 请求 {times} 次全部失败，跳过该段。最后错误：{lastException?.Message}");
         return default(T);
     }
+
     /// <summary>
     /// 新增：多轮对话（有上下文记忆）
     /// </summary>
