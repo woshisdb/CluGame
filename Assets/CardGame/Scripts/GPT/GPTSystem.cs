@@ -186,12 +186,12 @@ public class GPTSystem:SerializedMonoBehaviour
                 {
                     throw new Exception("GPT 返回空内容");
                 }
-
-                // ⚠️ 防止 GPT 偶尔输出非 JSON（你已经遇到过）
-                if (!resultText.TrimStart().StartsWith("{"))
-                {
-                    throw new Exception($"GPT 返回非 JSON 内容：{resultText.Substring(0, Math.Min(30, resultText.Length))}");
-                }
+                
+                // // ⚠️ 防止 GPT 偶尔输出非 JSON（你已经遇到过）
+                // if (!resultText.TrimStart().StartsWith("{"))
+                // {
+                //     throw new Exception($"GPT 返回非 JSON 内容：{resultText.Substring(0, Math.Min(30, resultText.Length))}");
+                // }
 
                 var result = JsonConvert.DeserializeObject<T>(resultText);
                 return result;

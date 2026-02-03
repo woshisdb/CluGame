@@ -2,6 +2,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
@@ -88,6 +89,17 @@ public class VillainCoreRet
 {
     public List<VillainCore> Villains;
 }
+/// <summary>
+/// 字典信息
+/// </summary>
+public class CocDicItem
+{
+    public string description;
+    /// <summary>
+    /// 
+    /// </summary>
+    public string type;
+}
 
 /// <summary>
 /// KP 框架：负责从模组文本中生成“玩家未介入时的世界主线”
@@ -103,18 +115,6 @@ public class KPSystem
     public WorldMainStory WorldMainStory;
 
     public VillainCoreRet VillainCoreRet;
-    // /// <summary>
-    // /// 从 CoC 模组文本中生成 NPC 的默认行为时间序列
-    // /// </summary>
-    // public async Task<Dictionary<string, List<WorldStorySegment>>> GenerateStory(
-    //     string cocText,
-    //     List<string> npcs
-    // )
-    // {
-    //     var result = await AskGptForWorldStory(cocText, npcs);
-    //     npcStory = result.npcStory;
-    //     return npcStory;
-    // }
     [Button]
     public async Task CreateStory(int time)
     {
@@ -492,10 +492,111 @@ WorldStorySegment行为段必须包含：
         Save("模组精简",str);
         Debug.Log("PDF 文本规范化整理完成（分段模式）");
     }
+    public class StoryHappenResult
+    {
+        public List<string> events;
+    }
+    public async Task<List<string>> GptExtractStoryHappen(
+        string str
+    )
+    {
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【世界事件候选提取器】。
+
+你的职责是：
+从文本中找出【可能构成世界事件的事实描述】。
+
+你不需要保证去重准确性。"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"
+【新的模组文本（节选）】
+{str}
+
+【你的任务】
+从【当前模组文本】中，提取【可能构成世界事件的事实描述】。
+
+你只负责“候选提取”，不需要考虑去重或排序。
+
+【事件分类铁律（必须严格遵守）】
+
+【最高优先级规则（绝对规则）】
+
+❗ 凡是事件是否发生【依赖调查员 / 玩家 / 外来者的行为】，
+无论语法如何，一律判定为【条件触发事件】。
+
+包括但不限于以下表述：
+- “当调查员……”
+- “如果有人进入……”
+- “调查员到达……后……”
+- “他们发现……将会……”
+- “若被调查 / 被打开 / 被触碰”
+
+➡ 这些【永远不能】归类为“已经发生”。
+
+【事件类型与格式】
+
+一、已经发生的事件（既成事实）
+
+判定条件（必须同时满足）：
+- 事件在文本中被明确描述为【在调查员介入前已发生】
+- 不依赖任何调查员或玩家行为
+- 即使玩家不存在，事件依然成立
+
+格式：
+～[发生时间：时间描述] 事件内容
+
+二、条件触发的事件（尚未发生）
+
+判定条件（满足任一即可）：
+- 事件是否发生取决于调查员行为
+- 使用“如果 / 当 / 一旦 / 若 / 将会”等条件结构
+- 描述的是潜在后果、触发结果、隐藏真相
+
+格式：
+*[条件：触发条件描述] 事件内容
+
+【禁止事项】
+
+- 禁止将依赖调查员的事件归为已发生
+- 禁止推断文本未明确写出的事实
+- 禁止改写背景设定为事件
+- 禁止书写玩家行为本身
+- 禁止评价性语言
+
+【输出要求】
+
+- 严格 JSON
+- 只输出事件字符串数组
+- 若没有任何可构成事件的内容 → 返回 []
+
+返回结构：
+List<string>"
+
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem
+            .ChatToGPT<List<string>>(messages);
+
+        return result ?? new List<string>();
+    }
+
+    
     [Button("过滤信息")]
     public async Task FilterGptText()
     {
         Dictionary<string,string> infoDictionary = new Dictionary<string, string>();
+        List<string> storyHappen = new();
         var rawText = Load("模组精简");
         var chunks = GptLongTextProcessor.SplitText(rawText);
         int index = 1;
@@ -515,9 +616,298 @@ WorldStorySegment行为段必须包含：
                     infoDictionary[kv.Key] = kv.Value;
                 }
             }
+            var events = await GptExtractStoryHappen(str);
+            storyHappen = events;
         }
-        Save<Dictionary<string,string>>("数据字典",infoDictionary);
+
+        Save<Dictionary<string, string>>("数据字典", infoDictionary);
         return;
+    }
+    public async Task<List<string>> GptCombine(
+        List<string> x,
+        List<string> y
+    )
+    {
+        if ((x == null || x.Count == 0) && (y == null || y.Count == 0))
+            return new List<string>();
+
+        var merged = new List<string>();
+        if (x != null) merged.AddRange(x);
+        if (y != null) merged.AddRange(y);
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【世界事件归并器】。
+
+你的职责是：
+对世界事件进行【去重、合并、排序】，而不是创作新内容。"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"以下是两批世界事件，请将它们合并成一个规范列表。
+
+【事件格式说明】
+- 已发生事件：
+  [发生时间：时间描述] 事件内容
+- 条件触发事件：
+  [条件：触发条件描述] 事件内容
+
+【合并规则（必须遵守）】
+1. 语义重复的事件只保留一条（保留信息更完整者）
+2. 不新增原文中不存在的事件
+3. 不改写事实含义
+4. 已发生事件排在前，条件事件排在后
+5. 同类事件按自然时间 / 条件顺序排列
+6. 若无法判断先后，保持原有顺序
+
+【待合并事件】
+{string.Join("\n", merged.Select(e => "- " + e))}
+
+【输出要求（非常重要）】
+1. 只能输出【合法 JSON】
+2. JSON 根结构必须是【数组】
+3. 数组的每一个元素必须是【字符串】
+4. 不允许输出 a,b,c 这种非 JSON 内容
+5. 不允许输出解释、注释或多余文字
+
+【正确示例】
+[
+  ""[发生时间：1926年春] 黑水溪开始出现异常水质"",
+  ""[条件：深入矿区调查] 发现地下洞穴系统""
+]
+
+请严格按照示例格式输出。"
+
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem
+            .ChatToGPT<List<string>>(messages);
+
+        return result ?? merged;
+    }
+    
+    public static List<List<string>> Chunk(List<string> source, int size)
+    {
+        var result = new List<List<string>>();
+        for (int i = 0; i < source.Count; i += size)
+        {
+            result.Add(source.Skip(i).Take(size).ToList());
+        }
+        return result;
+    }
+    
+    public async Task<List<string>> CombineAll(
+        List<string> storyHappen,
+        int size
+    )
+    {
+        // 第一步：分块
+        var blocks = Chunk(storyHappen, size);
+
+        // 第二步：像归并排序一样两两合并
+        while (blocks.Count > 1)
+        {
+            var next = new List<List<string>>();
+
+            for (int i = 0; i < blocks.Count; i += 2)
+            {
+                if (i + 1 < blocks.Count)
+                {
+                    var combined = await GptCombine(blocks[i], blocks[i + 1]);
+                    next.Add(combined);
+                }
+                else
+                {
+                    next.Add(blocks[i]);
+                }
+            }
+
+            blocks = next;
+        }
+
+        return blocks.Count > 0 ? blocks[0] : new List<string>();
+    }
+    public class StoryHappenSplitResult
+    {
+        public List<string> Happened = new();
+        public List<string> Conditional = new();
+        public List<string> Unknown = new(); // 防止数据污染
+    }
+
+    public static StoryHappenSplitResult SplitStoryHappen(List<string> storyHappen)
+    {
+        var result = new StoryHappenSplitResult();
+
+        if (storyHappen == null)
+            return result;
+
+        foreach (var line in storyHappen)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var firstChar = line[0];
+
+            switch (firstChar)
+            {
+                case '～':   // 已发生
+                case '~':    // 兼容英文波浪号
+                    result.Happened.Add(line);
+                    break;
+
+                case '*':    // 条件 / 未来
+                    result.Conditional.Add(line);
+                    break;
+
+                default:
+                    result.Unknown.Add(line);
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    [Button("生成故事信息")]
+    public async Task StoryFilterGptText()
+    {
+        List<string> storyHappen = new();
+        var rawText = Load("模组精简");
+        var chunks = GptLongTextProcessor.SplitText(rawText);
+        int index = 1;
+        foreach (var str in chunks)
+        {
+            Debug.Log(index+"/"+chunks.Count+".....");
+            index++;
+            var events = await GptExtractStoryHappen(str);
+            
+            if (events.Count > 0)
+            {
+                foreach (var e in events)
+                {
+                    if (!storyHappen.Contains(e))
+                    {
+                        storyHappen.Add(e);
+                    }
+                }
+            }
+        }
+        var ret = SplitStoryHappen(storyHappen);
+        int size = 10; // 你可以调 5 / 10 / 20
+        var conds = await CombineAll(ret.Conditional, size);
+        var happened = await CombineAll(ret.Happened, size);
+        Save("预期事件", conds);
+        Save("已经发生", happened);
+        return;
+    }
+    [Button]
+    public void ShowStory()
+    {
+        var str = Load<List<string>>("故事流程");
+        Debug.Log(111);
+    }
+    [Button("生成带类型字典")]
+    public async Task BuideHasTypeDic()
+    {
+        var infoDictionary = Load<Dictionary<string, string>>("数据字典");
+        Dictionary<string, CocDicItem> typedDict =
+            new Dictionary<string, CocDicItem>();
+
+        int typeIndex = 1;
+        foreach (var kv in infoDictionary)
+        {
+            Debug.Log($"TypeCheck {typeIndex}/{infoDictionary.Count} : {kv.Key}");
+            typeIndex++;
+
+            var item = await GptCheckCocDicItemType(kv.Key, kv.Value);
+            if (item != null)
+            {
+                typedDict[kv.Key] = item;
+            }
+        }
+
+        Save<Dictionary<string, CocDicItem>>("数据字典_typed", typedDict);
+        return;
+    }
+    public class CocTypeCheckResult
+    {
+        public string Type;        // monster / character / rule / item / knowledge
+    }
+    public async Task<CocDicItem> GptCheckCocDicItemType(
+        string key,
+        string description
+    )
+    {
+        var schema = GptSchemaBuilder.BuildSchema(typeof(CocTypeCheckResult));
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【对象类型判定器】。
+你只做分类判断，不做创作、不补全、不推理隐藏信息。"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"【对象名称】
+{key}
+
+【对象描述】
+{description}
+
+【可选类型（只能选一个）】
+- monster（怪物、非人威胁、异界存在）
+- character（角色、NPC、人类）
+- rule（规则、异常机制、非现实法则）
+- item（物品、道具）
+- knowledge（知识、传闻、世界设定）
+- place (地点，区域)
+【规则】
+- 只能从上述类型中选择
+- 如果是人物，一律为 character
+- 不要解释原因
+
+【输出要求】
+- 严格使用 JSON
+- 严格符合 Schema
+- 不要输出任何额外文本
+
+Schema：
+{schema}"
+            }
+        };
+
+        var result =
+            await GameFrameWork.Instance.GptSystem
+                .ChatToGPT<CocTypeCheckResult>(messages);
+
+        if (result == null || string.IsNullOrEmpty(result.Type))
+            return null;
+
+        return new CocDicItem
+        {
+            description = description,
+            type = result.Type
+        };
+    }
+
+    
+    [Button("获取信息")]
+    public void GetAllGptDict()
+    {
+        var data = Load<Dictionary<string, string>>("数据字典");
+        Debug.Log(1);
     }
     public class FilterReturn
     {

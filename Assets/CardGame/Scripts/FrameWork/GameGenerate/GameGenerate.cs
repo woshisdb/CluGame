@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 [Serializable]
 public class GptNpcBaseInfoResult
@@ -49,71 +50,80 @@ public class SpaceCreator
 
 public class GameGenerate
 {
+    public class GptNpcCheckResult
+    {
+        public bool IsNpc;
+        public string Name;
+        public string Description;
+    }
     /// <summary>
     /// 列出基本的npc信息
     /// </summary>
     /// <returns></returns>
     [Button]
-    public async Task<Dictionary<string, string>> GenerateBaseNpcInfs(string coc)
+    public async Task<Dictionary<string, string>> GenerateBaseNpcInfs(
+        Dictionary<string, string> cocObjects
+    )
     {
-        var schema = GptSchemaBuilder.BuildSchema(typeof(GptNpcBaseInfoResult));
+        var schema = GptSchemaBuilder.BuildSchema(typeof(GptNpcCheckResult));
+        var result = new Dictionary<string, string>();
 
-        var messages = new List<QwenChatMessage>
+        foreach (var kv in cocObjects)
         {
-            new QwenChatMessage
+            var objectName = kv.Key;
+            var objectDesc = kv.Value;
+
+            var messages = new List<QwenChatMessage>
             {
-                role = "system",
-                content =
-                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》跑团模组的角色解析器。
-你的职责是【信息抽取】，不是创作。"
-            },
+                new QwenChatMessage
+                {
+                    role = "system",
+                    content =
+                        @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》跑团模组的【对象类型判定器】。
+你的职责是判断一个对象是否为【NPC（非玩家角色）】。
+你只做判断与抽取，不进行创作、不补全、不推理隐藏信息。"
+                },
 
-            new QwenChatMessage
-            {
-                role = "user",
-                content =
-                    $@"【模组文本】
-{coc}
+                new QwenChatMessage
+                {
+                    role = "user",
+                    content =
+                        $@"【对象名称】
+{objectName}
 
-【任务要求】
-- 从模组中识别所有【被提及】的 NPC
-- 只基于文本内容，不允许添加任何原创设定
-- 不要推断隐藏真相，不要补全未明确出现的信息
-- 描述应是中立、事实导向、可作为世界设定锚点
-- 若信息不足，请保持描述简短
+【对象描述】
+{objectDesc}
 
-【NPC 选择规则】
-- 包括：剧情关键人物、事件推动者、重要线索来源
-- NPC 总数通常在 15~30 人之间
-- NPC 必须是单个角色，必须拆分为单人
+【判定规则】
+- NPC 必须是明确的单一人物
+- 必须在剧情中以“人”的身份出现
+- 排除：怪物、神祇、组织、地点、物品、概念性存在
+- 如果描述不足但可以确认是人，仍可判定为 NPC
+- 如果无法确认，IsNpc 必须为 false
+
 【输出要求】
 - 严格使用 JSON
-- 严格符合以下 Schema
-- 不要输出任何额外说明文字
+- 严格符合 Schema
+- 不输出任何额外说明文字
 
 Schema：
 {schema}"
-            }
-        };
+                }
+            };
 
-        GptNpcBaseInfoResult result =
-            await GameFrameWork.Instance.GptSystem
-                .ChatToGPT<GptNpcBaseInfoResult>(messages);
+            var check =
+                await GameFrameWork.Instance.GptSystem
+                    .ChatToGPT<GptNpcCheckResult>(messages);
 
-        // 转成你真正要的 Dictionary
-        Dictionary<string, string> dict = new Dictionary<string, string>();
-
-        if (result?.Npcs != null)
-        {
-            foreach (var npc in result.Npcs)
+            if (check != null && check.IsNpc && !string.IsNullOrEmpty(check.Name))
             {
-                if (string.IsNullOrEmpty(npc?.Name)) continue;
-                dict[npc.Name] = npc.Description ?? string.Empty;
+                result[check.Name] = check.Description ?? string.Empty;
             }
         }
 
-        return dict;
+        return result;
     }
+
     
     public async Task<Dictionary<string, string>> getMoreNpc(
         string coc,
@@ -192,23 +202,25 @@ Schema：
         return dict;
     }
     [Button]
-    public async Task<(Dictionary<string, string>, Dictionary<string, string>)> GetNpcs(string coc)
+    public async Task<(Dictionary<string, string>, Dictionary<string, string>)> GetNpcs(Dictionary<string, string> coc)
     {
         var res = await GenerateBaseNpcInfs(coc);
-        var res2 = await getMoreNpc(coc, res);
+        var res2 = new Dictionary<string, string>();//await getMoreNpc(coc, res);
         return (res, res2);
     }
 
     [Button]
     public async Task<(Dictionary<string, NpcCreateInf>,Dictionary<string, NpcCreateInf>,List<SpaceCreatorRef>)> GetNpcDetails()
     {
-        var coc = KPSystem.Load("模组精简");
+        var coc = KPSystem.Load<Dictionary<string, string>>("数据字典");
         var res = await GetNpcs(coc);
-        var detailRes1 = await CreateNpcInfo(coc,res.Item1);
-        var detailRes2 = await CreateNpcInfo(coc, res.Item2);
-        var spaces = await GenerateSpaces(coc,(detailRes1,detailRes2));
-        GameFrameWork.Instance.data.saveFile.AddCfgSaveData(detailRes1, detailRes2, spaces);
-        return (detailRes1, detailRes2,spaces);
+        Debug.Log(1111);
+        return (null,null,null);
+        // var detailRes1 = await CreateNpcInfo(coc,res.Item1);
+        // var detailRes2 = await CreateNpcInfo(coc, res.Item2);
+        // var spaces = await GenerateSpaces(coc,(detailRes1,detailRes2));
+        // GameFrameWork.Instance.data.saveFile.AddCfgSaveData(detailRes1, detailRes2, spaces);
+        // return (detailRes1, detailRes2,spaces);
     }
     public class GptSpaceGenerateResult
     {
