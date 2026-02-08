@@ -227,252 +227,265 @@ Schema：
         public List<SpaceCreator> spaces;
     }
 
-    public async Task<List<SpaceCreatorRef>> GenerateSpaces(
-    string cocText,(Dictionary<string, NpcCreateInf>, Dictionary<string, NpcCreateInf>) npcs)
+    public static async Task<List<SpaceCreatorRef>> GenerateSpaces(
+    string cocText,
+    NpcCreateInf npc,
+    List<SpaceCreatorRef> spaces)
+{
+    if (npc == null)
+        return spaces ?? new List<SpaceCreatorRef>();
+
+    spaces ??= new List<SpaceCreatorRef>();
+
+    // ========= 1. 现有地点摘要（给 GPT 判断是否“够用”） =========
+    var existingSpaceText = spaces.Count == 0
+        ? "（当前尚未生成任何地点）"
+        : string.Join("\n", spaces.Select(s =>
+$@"- 地点名：{s.name}
+  描述：{s.detail}
+  可直达地点：{(s.spaces.Count == 0 ? "无" : string.Join("，", s.spaces.Select(x => x.name)))}"));
+
+    // ========= 2. NPC 行动约束摘要 =========
+    var npcConstraintText = $@"- NPC：{npc.name}
+  性格特点：{npc.personality}
+  行为决策核心：{npc.decisionCore}
+  过去的重要行为：{npc.historyBehave}
+  当前所处位置：{(string.IsNullOrEmpty(npc.nowPlace) ? "未知" : npc.nowPlace)}
+  居住地：{(string.IsNullOrEmpty(npc.belong) ? "未明确" : npc.belong)}
+  工作或职责相关地点：{(string.IsNullOrEmpty(npc.work) ? "未明确" : npc.work)}
+  重要社会关系：{(
+      npc.relationships == null || npc.relationships.Count == 0
+          ? "未明确"
+          : string.Join("；", npc.relationships.Keys)
+  )}";
+
+    // ========= 3. GPT Schema =========
+    var schema = GptSchemaBuilder.BuildSchema(typeof(GptSpaceGenerateResult));
+
+    var messages = new List<QwenChatMessage>
     {
-        // ========= 1. 合并 NPC =========
-        var npcs1 = npcs.Item1;
-        var npcs2 = npcs.Item2;
-
-        var allNpcs = new Dictionary<string, NpcCreateInf>();
-        foreach (var kv in npcs1)
-            allNpcs[kv.Key] = kv.Value;
-
-        foreach (var kv in npcs2)
-            allNpcs[kv.Key] = kv.Value; // 后者覆盖前者
-
-        // ========= 2. 整理 NPC 约束摘要（给 GPT 用） =========
-        var npcConstraintText = string.Join("\n", allNpcs.Values.Select(n =>
-    $@"- 姓名：{n.name}
-      描述：{n.npcInfo}
-      居住地线索：{(string.IsNullOrEmpty(n.belong) ? "未明确" : n.belong)}
-      工作或常去地点：{(string.IsNullOrEmpty(n.work) ? "未明确" : n.work)}"));
-
-        // ========= 3. GPT Schema =========
-        var schema = GptSchemaBuilder.BuildSchema(typeof(GptSpaceGenerateResult));
-
-        var messages = new List<QwenChatMessage>
+        new QwenChatMessage
         {
-            new QwenChatMessage
-            {
-                role = "system",
-                content =
-    @"你是一名克苏鲁跑团模组的【世界结构构建器】。
-    你的职责是生成地点结构（Space），而不是剧情或事件。
-    你必须保证所有 NPC 的生活与行动在地点结构中形成闭包。"
-            },
+            role = "system",
+            content =
+@"你是一名《克苏鲁的呼唤（Call of Cthulhu）》跑团模组的【地点补全分析器】。
 
-            new QwenChatMessage
-            {
-                role = "user",
-                content =
-    $@"【CoC 模组文本】
-    {cocText}
+你不会重写世界结构。
+你不会优化、润色或重命名已有地点。
+你只做一件事：
 
-    【NPC 约束列表（必须被地点完全覆盖）】
-    {npcConstraintText}
+👉 判断【现有地点是否足以支撑该 NPC 的合理行动】
+👉 若不足，仅补充【最少数量】的必要地点
 
-    你的任务：
-1. 基于 CoC 模组文本生成所有重要地点
-2. 如果模组中出现“大地点”（如：小镇、医院、学校、矿区、庄园）
-   必须将其拆分为多个【可独立行动的小地点】
-3. 对每一个 NPC：
-   - 必须存在至少一个符合其身份的【居住地点】
-   - 若其描述中暗示了工作或常去地点，这些地点必须存在
-4. 地点之间必须具有明确、合理、可推理的相邻关系（可步行 / 可到达）
+如果现有地点已经足够：
+- 返回空的 spaces 数组
 
-====================
-【空间结构强制规则】
-====================
+你不描述剧情，不引入新设定，不使用修辞语言。"
+        },
 
-1. 地点必须以【n 级展开的目录结构】来组织：
-   - 大地点本身不可作为最终行动地点
-   - 大地点必须拆分为更具体的子地点
-   - 子地点可以继续向下拆分，直到形成“可以发生具体行动”的地点
+        new QwenChatMessage
+        {
+            role = "user",
+            content =
+$@"【CoC 角色与世界文本】
+{cocText}
 
-   示例（仅示意结构，不是让你照抄）：
-   - 某某庄园
-     - 主楼
-       - 客厅
-       - 书房
-     - 后院
-     - 厨房
+━━━━━━━━━━━━━━━━━━━━
+【NPC 行动约束（必须被满足）】
+━━━━━━━━━━━━━━━━━━━━
+{npcConstraintText}
 
-2. 所有地点必须处于某一层级之中：
-   - 不允许出现层级来源不明的孤立地点
-   - 不允许出现“逻辑上属于某地点，但未挂载”的地点
+━━━━━━━━━━━━━━━━━━━━
+【当前已存在的地点结构】
+━━━━━━━━━━━━━━━━━━━━
+{existingSpaceText}
 
-====================
-【路径与相邻关系规则】
-====================
+━━━━━━━━━━━━━━━━━━━━
+【你的任务】
+━━━━━━━━━━━━━━━━━━━━
 
-1. spaces 表示【物理上可直接移动到的地点】
-   - 移动必须符合空间层级逻辑
-   - 不允许跨越多个层级直接相连
+1️⃣ 判断：现有地点是否已足以支持该 NPC 在后续故事中的合理行动  
+2️⃣ 若不足，只补充【缺失的、不可替代的地点】  
+3️⃣ 若不需要补充，返回空数组
 
-   示例：
-   - 可以：书房 ↔ 客厅 ↔ 主楼
-   - 不可以：书房 ↔ 庄园大门（跳过中间层）
+━━━━━━━━━━━━━━━━━━━━
+【补充地点强制规则】
+━━━━━━━━━━━━━━━━━━━━
 
-2. 同一父级下的地点可以互相连接  
-   上下层地点只能与其直接父级或子级相连
+- 只能生成【新增地点】
+- 不得重复或改写已有地点
+- 新地点必须能明确说明：
+  👉 该 NPC 为什么“可能会去”
+- 新地点数量必须尽可能少（0 是完全合法结果）
 
-3. 任意地点的移动路径必须是：
-   - 连续的
-   - 可被推理的
-   - 不依赖隐含或未说明的通道
+━━━━━━━━━━━━━━━━━━━━
+【结构与连接规则】
+━━━━━━━━━━━━━━━━━━━━
 
-====================
+- 新地点必须符合层级逻辑
+- spaces 只填写“物理上可直接到达”的地点
+- 可与已有地点建立连接
+
+━━━━━━━━━━━━━━━━━━━━
 【输出要求】
-====================
+━━━━━━━━━━━━━━━━━━━━
 
-返回一系列的地点，对每个地点，请提供：
-- name：地点名称（应体现其层级归属，例如包含上级语义）
-- detail：客观、静态描述（不推进剧情）
-- spaces：从此地点可以直接前往的其他地点名称，只是一个name用来索引
+请严格返回 JSON：
 
-====================
-【禁止事项】
-====================
-
-- 不生成 NPC
-- 不推进剧情
-- 不使用第一人称
-- 不生成模组文本中完全不存在或无法合理推断的地点
-- 地点集合必须形成对 NPC 行为的【完整闭包】
-- 不要超过30个
-请严格使用 JSON 返回，不要添加解释性文字。
-返回的JSON结构必须能被映射成GptSpaceGenerateResult。
-其中
 public class GptSpaceGenerateResult
 {{
     public List<SpaceCreator> spaces;
 }}
+
 public class SpaceCreator
 {{
     public string name;
     public string detail;
-    /// <summary>
-    /// 所有相邻可以去的区域
-    /// </summary>
-    public List<string> spaces=new();
+    public List<string> spaces;
 }}
 
-    请严格使用 JSON 返回：
-    {schema}"
-            }
-        };
+⚠️ 若无需补充，请返回：
+{{
+  ""spaces"": []
+}}
 
-        // ========= 4. 调 GPT =========
-        var gptResult = await GameFrameWork.Instance.GptSystem
-            .ChatToGPT<GptSpaceGenerateResult>(messages);
+⚠️ 不要添加解释性文字  
+⚠️ 不要生成 NPC  
+⚠️ 返回 JSON 必须可直接反序列化  
 
-        if (gptResult?.spaces == null || gptResult.spaces.Count == 0)
-            return new List<SpaceCreatorRef>();
-
-        // ========= 5. 构建 SpaceCreator 对象 =========
-        var spaceMap = new Dictionary<string, SpaceCreatorRef>();
-
-        foreach (var node in gptResult.spaces)
-        {
-            if (!spaceMap.ContainsKey(node.name))
-            {
-                spaceMap[node.name] = new SpaceCreatorRef
-                {
-                    name = node.name,
-                    detail = node.detail
-                };
-            }
+JSON Schema：
+{schema}"
         }
+    };
 
-        // ========= 6. 处理相邻关系 =========
-        foreach (var node in gptResult.spaces)
+    // ========= 4. 调 GPT =========
+    var gptResult = await GameFrameWork.Instance.GptSystem
+        .ChatToGPT<GptSpaceGenerateResult>(messages);
+
+    if (gptResult?.spaces == null || gptResult.spaces.Count == 0)
+        return spaces;
+
+    // ========= 5. 合并新增地点 =========
+    var spaceMap = spaces.ToDictionary(s => s.name, s => s);
+
+    foreach (var node in gptResult.spaces)
+    {
+        if (string.IsNullOrWhiteSpace(node.name))
+            continue;
+
+        if (!spaceMap.ContainsKey(node.name))
         {
-            var current = spaceMap[node.name];
-
-            if (node.spaces == null) continue;
-
-            foreach (var neighborName in node.spaces)
+            spaceMap[node.name] = new SpaceCreatorRef
             {
-                if (!spaceMap.TryGetValue(neighborName, out var neighbor))
-                    continue;
-
-                if (!current.spaces.Contains(neighbor))
-                    current.spaces.Add(neighbor);
-            }
+                name = node.name,
+                detail = node.detail
+            };
         }
-        return spaceMap.Values.ToList();
     }
+
+    // ========= 6. 处理相邻关系（允许连接到旧地点） =========
+    foreach (var node in gptResult.spaces)
+    {
+        if (!spaceMap.TryGetValue(node.name, out var current))
+            continue;
+
+        if (node.spaces == null)
+            continue;
+
+        foreach (var neighborName in node.spaces)
+        {
+            if (!spaceMap.TryGetValue(neighborName, out var neighbor))
+                continue;
+
+            if (!current.spaces.Contains(neighbor))
+                current.spaces.Add(neighbor);
+        }
+    }
+
+    return spaceMap.Values.ToList();
+}
+
+
 
     public class GptNpcCreateResult
     {
         public Dictionary<string, NpcCreateInf> npcs;
     }
     
-    public async Task<Dictionary<string, NpcCreateInf>> CreateNpcInfo(string cocText,Dictionary<string, string> allNpcs)
+    public static async Task<NpcCreateInf> CreateNpcInfo(
+        string name,
+        string description)
     {
-        var schema = GptSchemaBuilder.BuildSchema(typeof(GptNpcCreateResult));
+        var schema = GptSchemaBuilder.BuildSchema(typeof(NpcCreateInf));
 
-        var npcBaseList = string.Join("\n", allNpcs.Select(kv =>
-            $@"- 姓名：{kv.Key}
-  模组中的描述：{kv.Value}"));
         var messages = new List<QwenChatMessage>
         {
             new QwenChatMessage
             {
                 role = "system",
                 content =
-                    @"你是一名克苏鲁跑团模组中的人物设定解析器。
-你的任务是：
-- 基于 CoC 模组文本
-- 在【不新增 NPC】的前提下
-- 补全每个 NPC 的完整人物信息
-你必须保持人物设定与模组文本一致，不得编造违背原文的重要事实。"
+                    @"你是一名克苏鲁跑团（CoC）模组中的【人物设定补全解析器】。
+你的职责是：
+- 基于提供的 NPC 名字与人物描述文本
+- 在【不新增 NPC、不新增未暗示重要事实】的前提下
+- 补全该 NPC 的结构化人物信息
+你必须保持人物与原始描述一致，允许信息不完整。"
             },
 
             new QwenChatMessage
             {
                 role = "user",
                 content =
-                    $@"【CoC 模组原文】
-{cocText}
+                    $@"
+NPC 名字：
+{name}
 
-【已存在的 NPC（禁止新增或删除）】
-{npcBaseList}
+NPC 已知信息（来源文本）：
+{description}
+
+数据结构定义：
 public struct RelationData
 {{
-    public string relation;
-    public string attitude;
+    public string relation;   // 关系类型
+    public string attitude;   // 对其态度
 }}
-请为每一个 NPC 生成完整信息，字段说明如下：
 
-- name：NPC 的名字
-- npcInfo：对 NPC 的整体客观描述
-- sex：性别
-- aim：当前最重要的个人目标或执念
-- historyBehave：过去发生过的关键行为或事件
-- relationships：与其他 NPC 或调查员的已知关系数据结构为Dictionary<string,RelationData>,key表示npc的名字，value中的relation参数为和他的关系，attitude参数为对他的态度
-- skillDetail：CoC 能力或擅长领域的文字描述
-- belong：居住地或长期停留地点
-- work：职业或社会角色
-- mentalState：当前心理状态（偏执、恐惧、冷漠等）
+public class NpcCreateInf
+{{
+    public string name;//姓名
+    public string appearance;//外表
+    public string sex;//性别
+    public string decisionCore;//自己行动的核心逻辑
+    public string historyBehave;//过去的经历
+    public Dictionary<string,RelationData> relationships;//与其他人关系
+    public string skillDetail;//自己的各种能力，例如特长和弱点
+    public string belong;//自己的家在哪
+    public string nowPlace;//当前所在地点
+    public string work;//自己的工作
+    public string personality;//人格特点
+}}
 
-规则：
-- 不要生成新的 NPC
-- 不要加入模组中未暗示的重要背景
-- 允许使用“不明确”“未知”等描述
-- 不要推进剧情
+生成规则：
+- 只生成这一个 NPC
+- 不新增其他 NPC（relationships 中只能引用文本中已出现的人物，否则为空）
+- 不推进剧情
 - 不使用第一人称
+- 不确定的信息请使用“未知”“不明确”
+- relationships 可以为空对象 {{}}，不要省略字段
+- 所有字段必须存在
 
-请严格使用 JSON 格式返回：
-{schema}"
+
+请严格返回 JSON，格式如下：
+{schema}
+"
             }
         };
 
         var result = await GameFrameWork.Instance.GptSystem
-            .ChatToGPT<GptNpcCreateResult>(messages);
+            .ChatToGPT<NpcCreateInf>(messages);
 
-        return result?.npcs ?? new Dictionary<string, NpcCreateInf>();
+        return result;
     }
+
 
 }

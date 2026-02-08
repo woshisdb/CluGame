@@ -54,30 +54,6 @@ public class ChatInteractionControler:GetWorldMapInteraction
 
         sb.AppendLine("【NPC 设定（被模拟对象）】");
         sb.AppendLine();
-
-        sb.AppendLine("【基本信息】");
-        sb.AppendLine(cfg.npcInfo);
-        sb.AppendLine();
-
-        sb.AppendLine($"【性别】{cfg.sex}");
-        sb.AppendLine($"【工作】{cfg.work}");
-        sb.AppendLine($"【住所】{cfg.belong}");
-        sb.AppendLine();
-
-        sb.AppendLine("【人生经历】");
-        sb.AppendLine(cfg.myHistory);
-        sb.AppendLine();
-
-        sb.AppendLine("【当前目标】");
-        sb.AppendLine(cfg.myAimInStory);
-        sb.AppendLine();
-
-        sb.AppendLine("【擅长的事情】");
-        sb.AppendLine(cfg.skillDetail);
-        sb.AppendLine();
-
-        sb.AppendLine("【心理状态】");
-        sb.AppendLine(cfg.mentalState);
         sb.AppendLine();
 
         sb.AppendLine("【与他人的关系】");

@@ -122,60 +122,19 @@ public struct RelationData
 /// </summary>
 public class AINpcMindCfg
 {
-    /// <summary>
-    /// 对npc对描述信息
-    /// </summary>
-    public string npcInfo;
-    /// <summary>
-    /// 我在故事中任务目标
-    /// </summary>
-    public string myAimInStory;
-    /// <summary>
-    /// 我的过去所做的事情
-    /// </summary>
-    public string myHistory;
-    /// <summary>
-    /// 我与其他人关系的描述
-    /// </summary>
-    public Dictionary<string,RelationData> relationships;
-    /// <summary>
-    /// 我所擅长的
-    /// </summary>
-    public string skillDetail;
-    /// <summary>
-    /// 住所
-    /// </summary>
-    public string belong;
-    /// <summary>
-    /// 他的工作
-    /// </summary>
-    /// <returns></returns>
-    public string work;
-    /// <summary>
-    /// 心理状况
-    /// </summary>
-    public string mentalState;
-    /// <summary>
-    /// 性别
-    /// </summary>
-    public string sex;
-}
-
-public class NpcCreateInf
-{
     public string name;
     /// <summary>
-    /// 对npc的描述信息
+    /// 对npc外表的描述
     /// </summary>
-    public string npcInfo;
+    public string appearance;
     /// <summary>
     /// 性别
     /// </summary>
     public string sex;
     /// <summary>
-    /// 自己的目标
+    /// 自己行动的核心逻辑
     /// </summary>
-    public string aim;
+    public string decisionCore;
     /// <summary>
     /// 过去的重要行为
     /// </summary>
@@ -189,18 +148,68 @@ public class NpcCreateInf
     /// </summary>
     public string skillDetail;
     /// <summary>
-    /// 住所
+    /// 他的家在哪里
     /// </summary>
     public string belong;
+    /// <summary>
+    /// 当前所在的位置
+    /// </summary>
+    public string nowPlace;
     /// <summary>
     /// 他的工作
     /// </summary>
     /// <returns></returns>
     public string work;
     /// <summary>
-    /// 心理状态
+    /// 性格特点
     /// </summary>
-    public string mentalState;
+    public string personality;
+}
+
+public class NpcCreateInf
+{
+    public string name;
+    /// <summary>
+    /// 对npc外表的描述
+    /// </summary>
+    public string appearance;
+    /// <summary>
+    /// 性别
+    /// </summary>
+    public string sex;
+    /// <summary>
+    /// 自己行动的核心逻辑
+    /// </summary>
+    public string decisionCore;
+    /// <summary>
+    /// 过去的重要行为
+    /// </summary>
+    public string historyBehave;
+    /// <summary>
+    /// 和各种角色的关系
+    /// </summary>
+    public Dictionary<string,RelationData> relationships;
+    /// <summary>
+    /// coc数值能力的描述
+    /// </summary>
+    public string skillDetail;
+    /// <summary>
+    /// 他的家在哪里
+    /// </summary>
+    public string belong;
+    /// <summary>
+    /// 当前所在的位置
+    /// </summary>
+    public string nowPlace;
+    /// <summary>
+    /// 他的工作
+    /// </summary>
+    /// <returns></returns>
+    public string work;
+    /// <summary>
+    /// 性格特点
+    /// </summary>
+    public string personality;
     /// <summary>
     /// 创建配置
     /// </summary>
@@ -228,15 +237,18 @@ public class NpcCreateInf
         ret.AddComponentCreator(new RelationComponentCreator());
         ret.AddComponentCreator(new ChatComponentCreator());
         var aimindCfg = new AINpcMindCfg();
-        aimindCfg.npcInfo = npcInfo;
-        aimindCfg.myAimInStory = aim;
-        aimindCfg.myHistory = historyBehave;
+        aimindCfg.appearance = appearance;
+        aimindCfg.name = name;
+        aimindCfg.decisionCore = decisionCore;
+        aimindCfg.historyBehave = historyBehave;
         aimindCfg.belong = belong;
         aimindCfg.work = work;
-        aimindCfg.mentalState = mentalState;
+        aimindCfg.nowPlace = nowPlace;
+        aimindCfg.work = work;
         aimindCfg.skillDetail = skillDetail;
         aimindCfg.relationships = relationships;
         aimindCfg.sex = sex;
+        aimindCfg.personality = personality;
         var mind = ret.ComponentCreators.Find(e => { return e is AIMindComponentCreator;}) as AIMindComponentCreator;
         mind.AINpcMindCfg = aimindCfg;
         var belongCmp = ret.ComponentCreators.Find(e => { return e is BelongComponentCreator;}) as BelongComponentCreator;

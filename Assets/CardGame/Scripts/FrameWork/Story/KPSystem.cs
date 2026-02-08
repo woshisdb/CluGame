@@ -99,6 +99,8 @@ public class CocDicItem
     /// 
     /// </summary>
     public string type;
+
+    public List<string> expectbehave;
 }
 
 /// <summary>
@@ -106,6 +108,12 @@ public class CocDicItem
 /// </summary>
 public class KPSystem
 {
+    public static string HappenedStory = "已经发生";
+    public static string ExpectStory = "预期事件";
+    public static string cocSimpleText = "模组精简";
+    public static string database_Type = "数据字典_typed";
+    public static string database = "数据字典";
+    
     /// <summary>
     /// 当前世界主线（key = npc）
     /// </summary>
@@ -496,7 +504,7 @@ WorldStorySegment行为段必须包含：
     {
         public List<string> events;
     }
-    public async Task<List<string>> GptExtractStoryHappen(
+    public static async Task<List<string>> GptExtractStoryHappen(
         string str
     )
     {
@@ -527,52 +535,83 @@ WorldStorySegment行为段必须包含：
 
 你只负责“候选提取”，不需要考虑去重或排序。
 
+━━━━━━━━━━━━━━━━━━━━
 【事件分类铁律（必须严格遵守）】
 
-【最高优先级规则（绝对规则）】
+【最高优先级规则 A（调查员依赖规则）】
 
 ❗ 凡是事件是否发生【依赖调查员 / 玩家 / 外来者的行为】，
-无论语法如何，一律判定为【条件触发事件】。
+无论语法、时态、表述方式如何，
+一律判定为【条件触发事件】。
 
-包括但不限于以下表述：
+包括但不限于：
 - “当调查员……”
 - “如果有人进入……”
 - “调查员到达……后……”
 - “他们发现……将会……”
 - “若被调查 / 被打开 / 被触碰”
 
-➡ 这些【永远不能】归类为“已经发生”。
+━━━━━━━━━━━━━━━━━━━━
+【最高优先级规则 B（时间字段纯净规则）】
 
+❗ 【发生时间】字段中：
+【严禁】出现任何与调查员或玩家有关的内容。
+
+以下内容【绝对不能】出现在 [发生时间： ] 中：
+- 调查员 / 玩家 / 外来者
+- 到达 / 进入 / 调查 / 发现 / 触发
+- “当……时”“之后”“一旦……”
+
+❗ 如果一个事件的“时间描述”依赖调查员行为，
+即使写在 [发生时间] 中，
+也【必须】改判为【条件触发事件】。
+
+━━━━━━━━━━━━━━━━━━━━
 【事件类型与格式】
 
 一、已经发生的事件（既成事实）
 
-判定条件（必须同时满足）：
-- 事件在文本中被明确描述为【在调查员介入前已发生】
-- 不依赖任何调查员或玩家行为
+判定条件（必须全部满足）：
+- 事件在文本中被明确描述为【调查员介入前已发生】
+- 完全不依赖调查员或玩家行为
+- 【发生时间】为客观时间（日期 / 年代 / 时间段 / 社会阶段）
 - 即使玩家不存在，事件依然成立
 
 格式：
-～[发生时间：时间描述] 事件内容
+～[发生时间：客观时间描述] 事件内容
 
+━━━━━━━━━━━━━━━━━━━━
 二、条件触发的事件（尚未发生）
 
 判定条件（满足任一即可）：
 - 事件是否发生取决于调查员行为
-- 使用“如果 / 当 / 一旦 / 若 / 将会”等条件结构
+- 时间或条件描述中涉及调查员
 - 描述的是潜在后果、触发结果、隐藏真相
 
 格式：
 *[条件：触发条件描述] 事件内容
 
+━━━━━━━━━━━━━━━━━━━━
+【明确示例（用于判定，不得违反）】
+
+❌ 错误（绝对禁止）：
+～[发生时间：在调查员到达镇上时] 听到哭声
+
+✅ 正确：
+*[条件：调查员到达镇上] 调查员能听到母亲的哭声
+
+━━━━━━━━━━━━━━━━━━━━
 【禁止事项】
 
-- 禁止将依赖调查员的事件归为已发生
+- 禁止将条件伪装为时间
+- 禁止将调查员相关事件归为已发生
 - 禁止推断文本未明确写出的事实
 - 禁止改写背景设定为事件
 - 禁止书写玩家行为本身
 - 禁止评价性语言
-
+- 不确定的事情就不要写，需要写好前因后果
+- 只写一些比较重要的内容，其他内容不要写
+━━━━━━━━━━━━━━━━━━━━
 【输出要求】
 
 - 严格 JSON
@@ -581,6 +620,7 @@ WorldStorySegment行为段必须包含：
 
 返回结构：
 List<string>"
+
 
             }
         };
@@ -598,7 +638,7 @@ List<string>"
         Dictionary<string,string> infoDictionary = new Dictionary<string, string>();
         List<string> storyHappen = new();
         var rawText = Load("模组精简");
-        var chunks = GptLongTextProcessor.SplitText(rawText);
+        var chunks = GptLongTextProcessor.SplitText(rawText,2000);
         int index = 1;
         foreach (var str in chunks)
         {
@@ -623,7 +663,7 @@ List<string>"
         Save<Dictionary<string, string>>("数据字典", infoDictionary);
         return;
     }
-    public async Task<List<string>> GptCombine(
+    public static async Task<List<string>> GptCombine(
         List<string> x,
         List<string> y
     )
@@ -703,7 +743,7 @@ List<string>"
         return result;
     }
     
-    public async Task<List<string>> CombineAll(
+    public static async Task<List<string>> CombineAll(
         List<string> storyHappen,
         int size
     )
@@ -780,7 +820,7 @@ List<string>"
     {
         List<string> storyHappen = new();
         var rawText = Load("模组精简");
-        var chunks = GptLongTextProcessor.SplitText(rawText);
+        var chunks = GptLongTextProcessor.SplitText(rawText,4000);
         int index = 1;
         foreach (var str in chunks)
         {
@@ -807,14 +847,9 @@ List<string>"
         Save("已经发生", happened);
         return;
     }
-    [Button]
-    public void ShowStory()
-    {
-        var str = Load<List<string>>("故事流程");
-        Debug.Log(111);
-    }
+
     [Button("生成带类型字典")]
-    public async Task BuideHasTypeDic()
+    public static async Task BuideHasTypeDic()
     {
         var infoDictionary = Load<Dictionary<string, string>>("数据字典");
         Dictionary<string, CocDicItem> typedDict =
@@ -832,7 +867,6 @@ List<string>"
                 typedDict[kv.Key] = item;
             }
         }
-
         Save<Dictionary<string, CocDicItem>>("数据字典_typed", typedDict);
         return;
     }
@@ -840,7 +874,7 @@ List<string>"
     {
         public string Type;        // monster / character / rule / item / knowledge
     }
-    public async Task<CocDicItem> GptCheckCocDicItemType(
+    public static async Task<CocDicItem> GptCheckCocDicItemType(
         string key,
         string description
     )
@@ -913,7 +947,7 @@ Schema：
     {
         public Dictionary<string,string> mapInfo;
     }
-    public async Task<FilterReturn> GptFilterInfo(
+    public static async Task<FilterReturn> GptFilterInfo(
         Dictionary<string, string> infoDictionary,
         string str
     )
@@ -988,7 +1022,7 @@ Schema：
     }
 
 
-    public async Task<string> GptCombineInfo(
+    public static async Task<string> GptCombineInfo(
         string obj,
         string befStr,
         string newStr
@@ -1031,7 +1065,7 @@ Schema：
         return await GameFrameWork.Instance.GptSystem
             .ChatToGPT(messages);
     }
-
+    
     /// <summary>
     /// 保存字符串到本地（Unity 安全路径）
     /// </summary>
@@ -1136,8 +1170,12 @@ public class GptLongTextProcessor
     /// <summary>
     /// 将长文本按段落切分
     /// </summary>
-    public static List<string> SplitText(string text)
+    public static List<string> SplitText(string text,int size = -1)
     {
+        if (size == -1)
+        {
+            size = MAX_CHUNK_LENGTH;
+        }
         var result = new List<string>();
 
         if (string.IsNullOrEmpty(text))
@@ -1149,7 +1187,7 @@ public class GptLongTextProcessor
         while (index < length)
         {
             int remaining = length - index;
-            int take = Math.Min(MAX_CHUNK_LENGTH, remaining);
+            int take = Math.Min(size, remaining);
 
             // 先假定硬切
             int cut = index + take;

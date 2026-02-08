@@ -34,7 +34,6 @@ public class QwenChatResponse
     public QwenChatOutput output { get; set; }
     // usage/request_id 可选，按需添加
 }
-
 public class AIResponse
 {
     public int choice { get; set; }
@@ -44,15 +43,14 @@ public class AIResponse
 
 public class QwenChatClient
 {
-    private string _apiKey;
+    public static string apiKey = "sk-fbe1e9616f8b4853b1bc54a79d25180f";
     private readonly HttpClient _httpClient;
     private readonly string _endpoint = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
 
-    public QwenChatClient(string apiKey)
+    public QwenChatClient()
     {
-        _apiKey = apiKey;
         _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
     }
 
     /// <summary>
@@ -64,7 +62,7 @@ public class QwenChatClient
     {
         var requestData = new QwenChatRequest
         {
-            model = "qwen-turbo",
+            model = "qwen-plus-latest",
             input = new { messages = messages }
         };
         foreach(var x in messages)
@@ -162,7 +160,7 @@ public class GPTSystem:SerializedMonoBehaviour
     [Button]
     public async Task<string> ChatToGPT(IEnumerable<QwenChatMessage> messages)
     {
-        var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+        var gpt = new QwenChatClient();
         var ret = await gpt.SendChatAsync(messages);
         return ret;
     }
@@ -177,7 +175,7 @@ public class GPTSystem:SerializedMonoBehaviour
         {
             try
             {
-                var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+                var gpt = new QwenChatClient();
 
                 // ⚠️ 建议在 SendChatAsync 内部支持 CancellationToken
                 var resultText = await gpt.SendChatAsync(messages);
@@ -238,7 +236,7 @@ public class GPTSystem:SerializedMonoBehaviour
         // 使用三段式对话：1) 系统规则 2) 对话历史 3) 输出约束
         session.AddChatHistory("Player", userInput);
         session.SetConstrain(constrain);
-        var gpt = new QwenChatClient("sk-fbe1e9616f8b4853b1bc54a79d25180f");
+        var gpt = new QwenChatClient();
         string lastRaw = null;
 
         for (int attempt = 0; attempt < maxRetry; attempt++)
