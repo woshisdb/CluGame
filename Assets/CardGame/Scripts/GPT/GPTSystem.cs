@@ -72,6 +72,7 @@ public class QwenChatClient
         var json = JsonConvert.SerializeObject(requestData);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+        _httpClient.Timeout = TimeSpan.FromMinutes(10);
         var response = await _httpClient.PostAsync(_endpoint, content);
         var responseString = await response.Content.ReadAsStringAsync();
 

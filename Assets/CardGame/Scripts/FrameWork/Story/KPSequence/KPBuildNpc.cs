@@ -61,6 +61,7 @@ public class KPBuildNpc
         {
             var item = typedDict[dicItem.name];
             spaces = await GameGenerate.GenerateSpaces(item.description,dicItem,spaces);
+            
             Debug.Log(11);
         }
 
@@ -71,5 +72,18 @@ public class KPBuildNpc
         }
         GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig = cfgs;
         Debug.Log(11111);
+    }
+    [Button("生成场景地图")]
+    public async void GenerateSpaceByDetails()
+    {
+        var rawText = KPSystem.Load("模组精简");
+        var sps = GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig;
+        var data = new List<string>();
+        foreach (var x in sps)
+        {
+            data.Add(x.title);
+        }
+        var ret = await KPSpaceGen.RebuildCocMapHierarchy(rawText,sps);
+        Debug.Log(111);
     }
 }

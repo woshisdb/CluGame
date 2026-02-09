@@ -1,6 +1,24 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+
+// public class GptMapGenerateResult
+// {
+//     public List<MapNode> nodes;
+// }
+//
+// public class MapNode
+// {
+//     public string name;              // 最终规范化后的地点名
+//     public string originalName;      // 来自输入的原始地点名
+//     public string level;             // world / area / building / room / hidden
+//     public string description;       // 地点在 CoC 语境中的意义
+//     public List<string> children;    // 下级地点
+//     public List<string> connections; // 同层可直达地点
+// }
+
 
 public static class KPNPCDetail
 {
@@ -138,4 +156,122 @@ NPC状态=存活/死亡/未知
 
         return result ?? string.Empty;
     }
+    
+    public static async Task<GameGenerate.GptSpaceGenerateResult> RebuildCocMapHierarchy(
+    string cocText,
+    List<SpaceCardConfig> allSpaces)
+{
+    var spaceDump = new StringBuilder();
+    foreach (var spc in allSpaces)
+    {
+        spaceDump.Append("名字：");
+        spaceDump.Append(spc.title);
+        spaceDump.Append("｜详细信息：");
+        spaceDump.Append(spc.descirption);
+        spaceDump.Append("\n");
+    }
+
+    var schema = GptSchemaBuilder.BuildSchema(typeof(GameGenerate.GptSpaceGenerateResult));
+
+    var messages = new List<QwenChatMessage>
+    {
+        new QwenChatMessage
+        {
+            role = "system",
+            content =
+@"你是《克苏鲁的呼唤（Call of Cthulhu）》模组的【地图结构重构解析器】。
+
+你的职责是：把一组已有地点，整理成【符合真实地理与物理逻辑、可直接用于 RPG 的地图结构】。
+你不是在写故事，而是在构建一张“可以走、可以调查、可以被程序使用”的地图。"
+        },
+
+        new QwenChatMessage
+        {
+            role = "user",
+            content =$@"
+━━━━━━━━━━━━━━━━━━━━
+【已有地点数据（不可删除）】
+━━━━━━━━━━━━━━━━━━━━
+{spaceDump}
+
+━━━━━━━━━━━━━━━━━━━━
+【你的任务】
+━━━━━━━━━━━━━━━━━━━━
+你需要将这些地点整理为一张【真实、可行走、符合物理世界的 CoC 地图结构】。
+
+这不是故事，不是叙事，而是【空间拓扑结构】。
+
+━━━━━━━━━━━━━━━━━━━━
+【地图构建原则】
+━━━━━━━━━━━━━━━━━━━━
+1️⃣ 所有地点必须处于明确的物理层级中  
+2️⃣ 父空间在物理上必须“包含”子空间  
+3️⃣ spaces 只表示【可以直接进入的下级空间】  
+4️⃣ 禁止抽象关系、时间关系、剧情关系  
+5️⃣ 禁止循环结构（A → B → A）
+
+━━━━━━━━━━━━━━━━━━━━
+【完整性强制规则（极其重要）】
+━━━━━━━━━━━━━━━━━━━━
+- ❌ 绝对禁止删除任何已有地点
+- ❌ 不允许任何已有地点在最终结果中缺失
+- ✅ 允许新增【区域 / 过渡 / 容器型】空间
+- ⚠️ 如果一个地点在物理上无法直接挂载：
+     必须为其创建新的父级空间
+- 每个地点必须是其他节点的子节点或父节点
+- 整个地图节点必须是联通的
+
+━━━━━━━━━━━━━━━━━━━━
+【关键结果约束（用于防止空结构）】
+━━━━━━━━━━━━━━━━━━━━
+- 最终输出中：
+  - 除了“世界 / 区域 / 地图根节点”外
+  - ❗ 每一个 SpaceCreator：
+       必须至少出现在某一个父空间的 spaces 中
+- 不允许存在“未被引用的孤立地点”
+
+━━━━━━━━━━━━━━━━━━━━
+【数据结构（严格遵守）】
+━━━━━━━━━━━━━━━━━━━━
+
+public class GptSpaceGenerateResult
+{{
+    public List<SpaceCreator> spaces;
+}}
+
+public class SpaceCreator
+{{
+    public string name;
+    public string detail;
+    public List<string> spaces;
+}}
+
+━━━━━━━━━━━━━━━━━━━━
+【严格输出规则】
+━━━━━━━━━━━━━━━━━━━━
+- 只允许输出【纯 JSON】
+- ❌ 不允许出现 ```、```json、代码块标记
+- ❌ 不允许任何解释性文字
+- ❌ 不允许输出示例
+- 输出内容必须可以被直接反序列化
+
+━━━━━━━━━━━━━━━━━━━━
+【spaces 字段特别说明】
+━━━━━━━━━━━━━━━━━━━━
+- spaces 只能是字符串数组
+- 每个字符串必须等于某个 SpaceCreator.name
+- ❌ 禁止在 spaces 中输出对象
+"
+            
+        }
+    };
+
+    var result = await GameFrameWork.Instance.GptSystem
+        .ChatToGPT<GameGenerate.GptSpaceGenerateResult>(messages);
+
+    return result ?? new GameGenerate.GptSpaceGenerateResult
+    {
+        spaces = new List<SpaceCreator>()
+    };
+}
 }

@@ -237,7 +237,7 @@ Schema：
 
     spaces ??= new List<SpaceCreatorRef>();
 
-    // ========= 1. 现有地点摘要（给 GPT 判断是否“够用”） =========
+    // ========= 1. 现有地点摘要 =========
     var existingSpaceText = spaces.Count == 0
         ? "（当前尚未生成任何地点）"
         : string.Join("\n", spaces.Select(s =>
@@ -245,21 +245,32 @@ $@"- 地点名：{s.name}
   描述：{s.detail}
   可直达地点：{(s.spaces.Count == 0 ? "无" : string.Join("，", s.spaces.Select(x => x.name)))}"));
 
-    // ========= 2. NPC 行动约束摘要 =========
+    // ========= 2. NPC 行动约束 =========
     var npcConstraintText = $@"- NPC：{npc.name}
-  性格特点：{npc.personality}
-  行为决策核心：{npc.decisionCore}
-  过去的重要行为：{npc.historyBehave}
-  当前所处位置：{(string.IsNullOrEmpty(npc.nowPlace) ? "未知" : npc.nowPlace)}
-  居住地：{(string.IsNullOrEmpty(npc.belong) ? "未明确" : npc.belong)}
-  工作或职责相关地点：{(string.IsNullOrEmpty(npc.work) ? "未明确" : npc.work)}
-  重要社会关系：{(
-      npc.relationships == null || npc.relationships.Count == 0
-          ? "未明确"
-          : string.Join("；", npc.relationships.Keys)
-  )}";
+- 性格特点：{npc.personality}
+- 行为决策核心：{npc.decisionCore}
+- 过往重要经历：{npc.historyBehave}
+- 当前所处位置：{(string.IsNullOrEmpty(npc.nowPlace) ? "未知" : npc.nowPlace)}
+- 居住地：{(string.IsNullOrEmpty(npc.belong) ? "未明确" : npc.belong)}
+- 工作 / 职责相关地点：{(string.IsNullOrEmpty(npc.work) ? "未明确" : npc.work)}
+- 重要社会关系：{(
+    npc.relationships == null || npc.relationships.Count == 0
+        ? "未明确"
+        : string.Join("；", npc.relationships.Keys)
+)}";
 
-    // ========= 3. GPT Schema =========
+    // ========= 3. 本轮评估视角（关键） =========
+    var evaluationContext = @"
+这是一次【新的行动阶段】下的空间审查。
+
+请假设：
+- NPC 已经尝试在【现有地点】中行动
+- 若某些行为只能被“叙事跳过”而无法被具体地点承载
+  → 说明地点结构仍然不完整
+- 你可以推翻此前“地点已足够”的隐含结论
+";
+
+    // ========= 4. GPT Schema =========
     var schema = GptSchemaBuilder.BuildSchema(typeof(GptSpaceGenerateResult));
 
     var messages = new List<QwenChatMessage>
@@ -268,32 +279,38 @@ $@"- 地点名：{s.name}
         {
             role = "system",
             content =
-@"你是一名《克苏鲁的呼唤（Call of Cthulhu）》跑团模组的【地点补全分析器】。
+@"你是一名《克苏鲁的呼唤（Call of Cthulhu）》跑团模组的【地点结构审查器】。
 
-你不会重写世界结构。
-你不会优化、润色或重命名已有地点。
-你只做一件事：
+你不编写剧情。
+你不塑造氛围。
+你不优化、润色或重命名任何已有地点。
 
-👉 判断【现有地点是否足以支撑该 NPC 的合理行动】
-👉 若不足，仅补充【最少数量】的必要地点
+你的职责只有一个：
 
-如果现有地点已经足够：
-- 返回空的 spaces 数组
+👉 判断【现有地点是否仍然足以支撑 NPC 在当前行动阶段的合理行为】
+👉 若不足，仅补充【最少数量、不可替代的地点】
 
-你不描述剧情，不引入新设定，不使用修辞语言。"
+注意：
+- 你可以推翻之前“地点已足够”的判断
+- 返回空数组是合法的，但不是默认答案"
         },
 
         new QwenChatMessage
         {
             role = "user",
             content =
-$@"【CoC 角色与世界文本】
+$@"【CoC 世界与模组文本】
 {cocText}
 
 ━━━━━━━━━━━━━━━━━━━━
-【NPC 行动约束（必须被满足）】
+【NPC 行动约束（必须满足）】
 ━━━━━━━━━━━━━━━━━━━━
 {npcConstraintText}
+
+━━━━━━━━━━━━━━━━━━━━
+【评估视角（非常重要）】
+━━━━━━━━━━━━━━━━━━━━
+{evaluationContext}
 
 ━━━━━━━━━━━━━━━━━━━━
 【当前已存在的地点结构】
@@ -303,34 +320,29 @@ $@"【CoC 角色与世界文本】
 ━━━━━━━━━━━━━━━━━━━━
 【你的任务】
 ━━━━━━━━━━━━━━━━━━━━
-
-1️⃣ 判断：现有地点是否已足以支持该 NPC 在后续故事中的合理行动  
-2️⃣ 若不足，只补充【缺失的、不可替代的地点】  
-3️⃣ 若不需要补充，返回空数组
+1️⃣ 判断：现有地点是否仍然足以支持 NPC 的行动  
+2️⃣ 若不足，仅补充【缺失的、不可替代的地点】  
+3️⃣ 若不需要补充，返回空数组  
 
 ━━━━━━━━━━━━━━━━━━━━
-【补充地点强制规则】
+【强制规则】
 ━━━━━━━━━━━━━━━━━━━━
-
 - 只能生成【新增地点】
-- 不得重复或改写已有地点
-- 新地点必须能明确说明：
-  👉 该 NPC 为什么“可能会去”
-- 新地点数量必须尽可能少（0 是完全合法结果）
+- 不得重复、改写、优化已有地点
+- 新地点必须明确说明：
+  👉 NPC 为什么“可能会去”
+- 必须保证NPC的后续行动的地区（例如工作，日常，任务等）必须包含在地点中，没有的地方就需要补充
 
 ━━━━━━━━━━━━━━━━━━━━
 【结构与连接规则】
 ━━━━━━━━━━━━━━━━━━━━
-
-- 新地点必须符合层级逻辑
-- spaces 只填写“物理上可直接到达”的地点
+- 地点必须符合现实与层级逻辑
+- spaces 仅填写“物理上可直接到达”的地点
 - 可与已有地点建立连接
 
 ━━━━━━━━━━━━━━━━━━━━
-【输出要求】
+【输出格式（必须严格遵守）】
 ━━━━━━━━━━━━━━━━━━━━
-
-请严格返回 JSON：
 
 public class GptSpaceGenerateResult
 {{
@@ -350,22 +362,21 @@ public class SpaceCreator
 }}
 
 ⚠️ 不要添加解释性文字  
-⚠️ 不要生成 NPC  
-⚠️ 返回 JSON 必须可直接反序列化  
+⚠️ JSON 必须可直接反序列化  
 
 JSON Schema：
 {schema}"
         }
     };
 
-    // ========= 4. 调 GPT =========
+    // ========= 5. 调 GPT =========
     var gptResult = await GameFrameWork.Instance.GptSystem
         .ChatToGPT<GptSpaceGenerateResult>(messages);
 
     if (gptResult?.spaces == null || gptResult.spaces.Count == 0)
         return spaces;
 
-    // ========= 5. 合并新增地点 =========
+    // ========= 6. 合并新增地点 =========
     var spaceMap = spaces.ToDictionary(s => s.name, s => s);
 
     foreach (var node in gptResult.spaces)
@@ -383,7 +394,7 @@ JSON Schema：
         }
     }
 
-    // ========= 6. 处理相邻关系（允许连接到旧地点） =========
+    // ========= 7. 处理连接关系 =========
     foreach (var node in gptResult.spaces)
     {
         if (!spaceMap.TryGetValue(node.name, out var current))
@@ -404,6 +415,7 @@ JSON Schema：
 
     return spaceMap.Values.ToList();
 }
+
 
 
 
