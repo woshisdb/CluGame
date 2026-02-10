@@ -72,18 +72,56 @@ public class KPBuildNpc
         }
         GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig = cfgs;
         Debug.Log(11111);
+        KPSystem.Save("存储地图",cfgs);
     }
     [Button("生成场景地图")]
     public async void GenerateSpaceByDetails()
     {
         var rawText = KPSystem.Load("模组精简");
-        var sps = GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig;
+        var sps = KPSystem.Load<List<SpaceCardConfig>>("存储地图");
+        // var sps = GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig;
         var data = new List<string>();
         foreach (var x in sps)
         {
             data.Add(x.title);
         }
-        var ret = await KPSpaceGen.RebuildCocMapHierarchy(rawText,sps);
+        var ret = await KPSpaceGen.GeneratePlayableMap(sps);
+        var bindRet = new List<SpaceCreatorRef>();
+        foreach (var x in ret)
+        {
+            var nex = new SpaceCreatorRef()
+            {
+                name = x.name,
+                detail = x.detail,
+            };
+            bindRet.Add(nex);
+        }
+
+        foreach (var x in ret)
+        {
+            var y = bindRet.Find(e => { return e.name == x.name; });
+            if (bindRet!=null)
+            {
+                foreach (var node in x.leafSpaces)
+                {
+                    var spMap = bindRet.Find(e =>
+                    {
+                        return e.name == node;
+                    });
+                    if (spMap!=null)
+                    {
+                        y.spaces.Add(spMap);
+                    }
+                }
+            }
+        }
+
+        var realRet = new List<SpaceCardConfig>();
+        foreach (var x in bindRet)
+        {
+            realRet.Add(x.CreateCfg());
+        }
+        GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig = realRet;
         Debug.Log(111);
     }
 }
