@@ -53,7 +53,7 @@ public class KPFilterStory
         return;
     }
     /// <summary>
-    /// 进一步为过滤的KV信息来天假类型
+    /// 进一步为过滤的KV信息来获得类型信息
     /// </summary>
     [Button("生成带类型字典")]
     public static async Task BuideHasTypeDic()
