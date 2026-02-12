@@ -8,7 +8,10 @@ public class KPWorldStoryTask
     /// 对角色的描述信息
     /// </summary>
     public string description;
-    public 
+    /// <summary>
+    /// 对当前任务的简介
+    /// </summary>
+    public string title;
 }
 
 public class KPWorldStoryManager
@@ -16,7 +19,7 @@ public class KPWorldStoryManager
     /// <summary>
     /// 当前世界的任务目标
     /// </summary>
-    public List<string,> kpTask;
+    public List<KPWorldStoryTask> kpTask;
     /// <summary>
     /// 初始化要追踪的NPC
     /// </summary>
@@ -31,6 +34,11 @@ public class KPWorldStoryManager
     {
         
     }
-    
-    
+    /// <summary>
+    /// 设置角色的位置
+    /// </summary>
+    public void SetPlayersPos()
+    {
+        
+    }
 }
