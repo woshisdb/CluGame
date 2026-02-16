@@ -194,6 +194,10 @@ public class NpcCreateInf
     /// </summary>
     public string skillDetail;
     /// <summary>
+    /// 当前的状态
+    /// </summary>
+    public string nowState;
+    /// <summary>
     /// 他的家在哪里
     /// </summary>
     public string belong;

@@ -41,19 +41,21 @@ public class KPBuildNpc
     public async void GenerateAllNPC()
     {
         var npcCreatorDic = new Dictionary<string, NpcCreateInf>();
+        ///角色的归属信息
+        var npcPlaceDic = KPSystem.Load<Dictionary<string,string>>("NPC归属地点信息");
         var typedDict = KPSystem.Load<Dictionary<string, CocDicItem>>("数据字典_typed");
         foreach (var dicItem in typedDict)
         {
             var value = dicItem.Value;
             if (value.type == "character")//如果是角色的话
             {
-                var cf = await GameGenerate.CreateNpcInfo(dicItem.Key, dicItem.Value.description);
+                var cf = await GameGenerate.CreateNpcInfo(dicItem.Key, dicItem.Value.description+"\n相关地点\n"+npcPlaceDic[dicItem.Key]);
                 cf.name = dicItem.Key;
                 npcCreatorDic[dicItem.Key] = cf;
             }
         }
-
         GameFrameWork.Instance.data.saveFile.ConfigSaveData.mainNpcCfg = npcCreatorDic.Values.ToList();
+        KPSystem.Save("NPC个人信息",GameFrameWork.Instance.data.saveFile.ConfigSaveData.mainNpcCfg);
         Debug.Log("11111");
     }
     /// <summary>
@@ -110,8 +112,9 @@ public class KPBuildNpc
         Debug.Log(realRet);
         KPSystem.Save("生成地图数据",realRet);
         var spaceNodes = await KPSpaceGen.GenerateSpaceNodesFromGPT(realRet);
-        KPSystem.Save("生成SpaceNodes",spaceNodes);
-        
+        var spaceCardConfigs = KPSpaceGen.BuildSpaceConfig(spaceNodes);
+        GameFrameWork.Instance.data.saveFile.ConfigSaveData.SpaceCardsConfig = spaceCardConfigs;
+        KPSystem.Save("生成SpaceNodes",spaceCardConfigs);
     }
     public static string RemoveDeletedNodes(string mapText)
     {

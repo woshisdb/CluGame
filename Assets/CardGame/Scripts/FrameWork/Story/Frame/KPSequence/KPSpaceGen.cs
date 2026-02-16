@@ -724,7 +724,7 @@ Z地区名：
         return await GameFrameWork.Instance.GptSystem.ChatToGPT(messages);
     }
     
-    public static async Task<List<SpaceCreator>> GenerateSpaceNodesFromGPT(string spaceTxt)
+    public static async Task<List<SpaceNode>> GenerateSpaceNodesFromGPT(string spaceTxt)
     {
         var messages = new List<QwenChatMessage>
         {
@@ -774,17 +774,17 @@ public class SpaceNode
 
         var result = await GameFrameWork.Instance.GptSystem
             .ChatToGPT<List<SpaceNode>>(messages);
-        var retAll = new List<SpaceCreator>();
-        foreach (var x in result)
-        {
-            retAll.Add(new SpaceCreator()
-            {
-                name = x.name,
-                detail = x.detail,
-                spaces = x.leafSpaces
-            });
-        }
-        return retAll;
+        // var retAll = new List<SpaceCreator>();
+        // foreach (var x in result)
+        // {
+        //     retAll.Add(new SpaceCreator()
+        //     {
+        //         name = x.name,
+        //         detail = x.detail,
+        //         spaces = x.leafSpaces
+        //     });
+        // }
+        return result;
     }
     
     public static async Task<string> GenerateMoreDetail()

@@ -30,6 +30,8 @@ public class GameFrameWork : SerializedMonoBehaviour,ISendEvent,IUISelector
             return data.saveFile.IdGenerator;
         }
     }
+
+    public KP KP;
     public UIManager UIManager;
     public RollSystem rollSystem;
     public GameConfig gameConfig;

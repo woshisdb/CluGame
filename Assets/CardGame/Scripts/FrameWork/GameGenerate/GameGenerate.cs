@@ -467,6 +467,7 @@ public class NpcCreateInf
     public string name;//姓名
     public string appearance;//外表
     public string sex;//性别
+    public string nowState;//当前的状态，是否活着
     public string decisionCore;//自己行动的核心逻辑
     public string historyBehave;//过去的经历
     public Dictionary<string,RelationData> relationships;//与其他人关系
