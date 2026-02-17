@@ -27,7 +27,6 @@ public class ChatPanel : MonoBehaviour
     // Reference to the chat container UI to display messages
     [SerializeField] private ChatContainer chatContainer;
     public InputField inputField;
-
     private IChatPanelListener listener;
     private ChatComponent currentNpcId;
     private ChatComponent speaker;
