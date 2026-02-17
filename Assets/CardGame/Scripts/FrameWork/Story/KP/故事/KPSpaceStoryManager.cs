@@ -13,7 +13,6 @@ public class KPSpaceStoryManager
     public Dictionary<string, NpcCardModel> sceneNpcs = new Dictionary<string, NpcCardModel>();
     public Dictionary<string, GptChatSession> npcChatSessions = new Dictionary<string, GptChatSession>();
     public GptChatSession narratorSession;
-
     [Button("开始故事")]
     public async void StartSpaceStory()
     {
@@ -63,7 +62,7 @@ public class KPSpaceStoryManager
     private void ParseSceneNpcs()
     {
         sceneNpcs.Clear();
-        var allNpcs = GameFrameWork.Instance.data.saveFile.npcs;
+        var allNpcs = GameFrameWork.Instance.playerManager.allNpc;
         var pattern = @"[\u4e00-\u9fa5a-zA-Z0-9_]{2,10}";
         var matches = Regex.Matches(context, pattern);
         
@@ -93,7 +92,7 @@ public class KPSpaceStoryManager
                      "- 使用第三人称、描述性语言\n" +
                      "\n" +
                      "场景背景" +
-                     context+
+                     context+"\n"+
                      "【输出格式要求】\n" +
                      "你必须严格按以下 JSON 输出：\n" +
                      "{\n" +
@@ -209,7 +208,7 @@ public class KPSpaceStoryManager
         return result;
     }
 
-    public KPSpaceStoryManager()
+    public KPSpaceStoryManager(string context,Dictionary<string, NpcCardModel> npcs)
     {
         
     }
