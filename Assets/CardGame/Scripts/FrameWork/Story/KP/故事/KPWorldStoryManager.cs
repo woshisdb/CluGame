@@ -14,7 +14,7 @@ public class KPWorldStoryManager
 {
     public List<KPWorldStoryTask> kpTask;
     public string firstSceneContext;
-    
+    public KPSpaceStoryManager KPSpaceStoryManager;
     [Button]
     public async void StartStory()
     {
@@ -32,6 +32,11 @@ public class KPWorldStoryManager
         Debug.Log("故事初始化完成！");
         Debug.Log($"任务数量: {kpTask?.Count ?? 0}");
         Debug.Log($"第一个场景: {firstSceneContext}");
+        
+        var spaceManager = new KPSpaceStoryManager();
+        this.KPSpaceStoryManager = spaceManager;
+        spaceManager.context = firstSceneContext;
+        spaceManager.StartSpaceStory();
     }
 
     private async Task GenerateTasks(string cocText)
@@ -43,10 +48,8 @@ public class KPWorldStoryManager
                 role = "system",
                 content =
                     @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【任务提取器】。
-
 你的职责是：
 从模组文本中提取【调查员需要完成的主要任务】。
-
 规则：
 - 任务必须是可行动的、明确的目标
 - 任务必须与模组的核心剧情相关
@@ -98,16 +101,14 @@ public class KPWorldStoryManager
             {
                 role = "system",
                 content =
-                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【开场场景生成器】。
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【首次接触场景生成器】。
 
 你的职责是：
-从模组文本中提取【调查员刚被引入故事时】的场景描述。
+从模组中找到调查员的导入故事，在什么地方发生什么事情。
 
 规则：
-- 描述调查员所处的初始场景
-- 包含场景中的关键角色
+- 这是调查员真正开始故事的第一个场景
 - 营造克苏鲁风格的氛围
-- 不推进剧情，只描述当前状态
 - 使用第三人称、描述性语言"
             },
             new QwenChatMessage
@@ -119,13 +120,11 @@ public class KPWorldStoryManager
 
 【你的任务】
 
-生成一个【开场场景描述】，用于 KP 模式的 context 字段。
+获取coc模组文本中导入场景（例如PL在某个酒馆收到了一份委托）。
 
 场景描述应包含：
-- 场景地点和环境
+- 调查员首次接触异常事件后的场景地点和环境
 - 场景中的关键角色（用他们的名字）
-- 初始的氛围和异常现象
-- 调查员可能注意到的重要细节
 
 输出要求：
 - 只输出纯文本
@@ -134,7 +133,7 @@ public class KPWorldStoryManager
 - 直接输出场景描述
 
 示例格式：
-一个昏暗的电梯里，侦探A和嫌疑人B站在一起。电梯在上升过程中突然停顿，灯光闪烁，空气中弥漫着淡淡的铁锈味。墙壁上似乎有模糊的污渍，像是某种液体留下的痕迹。"
+在警局的审讯室里，侦探A和嫌疑人B面对面坐着。审讯室的灯光昏暗，墙上挂着单向玻璃。嫌疑人B看起来紧张不安，手指不停地敲击桌面。空气中弥漫着陈旧的烟草味。审讯室的门紧闭，隔音效果很好，外面的声音几乎听不见。"
             }
         };
 

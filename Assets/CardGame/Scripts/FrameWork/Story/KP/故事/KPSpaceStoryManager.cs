@@ -49,6 +49,8 @@ public class KPSpaceStoryManager
         {
             InitNpcSession(npcPair.Key, npcPair.Value);
         }
+        
+        
         GameFrameWork.Instance.ChatPanel.Init(playerChat,null, new KPStoryListener(async e =>
         {
             e.panel.submitBtn.gameObject.SetActive(false);
@@ -206,11 +208,6 @@ public class KPSpaceStoryManager
         result.IsDialogue = false;
         result.Message = input;
         return result;
-    }
-
-    public KPSpaceStoryManager(string context,Dictionary<string, NpcCardModel> npcs)
-    {
-        
     }
 }
 

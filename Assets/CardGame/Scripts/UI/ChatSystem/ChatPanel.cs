@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 
 using UnityEngine;
@@ -31,6 +32,7 @@ public class ChatPanel : MonoBehaviour
     private ChatComponent currentNpcId;
     private ChatComponent speaker;
     public Button submitBtn;
+    public TMP_Dropdown Dropdown;
     /// <summary>
     /// 初始化
     /// </summary>
