@@ -10,6 +10,7 @@ public class ChatInput
 {
     public ChatComponent Speaker;
     public ChatComponent TargetNpc;
+    public string SelectedNpcName;
     public string Content;
     public ChatPanel panel;
 }
@@ -65,10 +66,19 @@ public class ChatPanel : MonoBehaviour
         if (string.IsNullOrWhiteSpace(inputField.text))
             return;
 
+        var selectedNpc = GetSelectedOption();
+        var targetNpc = currentNpcId;
+
+        if (!string.IsNullOrEmpty(selectedNpc) && selectedNpc != "KP")
+        {
+            targetNpc = null;
+        }
+
         var input = new ChatInput
         {
             Speaker = speaker,
-            TargetNpc = currentNpcId,
+            TargetNpc = targetNpc,
+            SelectedNpcName = selectedNpc,
             Content = inputField.text,
             panel = this,
         };

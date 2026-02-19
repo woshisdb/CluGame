@@ -13,15 +13,17 @@ public class KPSpaceStoryManager
     public Dictionary<string, NpcCardModel> sceneNpcs = new Dictionary<string, NpcCardModel>();
     public Dictionary<string, GptChatSession> npcChatSessions = new Dictionary<string, GptChatSession>();
     public GptChatSession narratorSession;
+
     /// <summary>
     /// 这里的重要信息有哪些
     /// </summary>
     public string importantThings;
+
     /// <summary>
     /// 已经发现的信息
     /// </summary>
     public string hasFindThings;
-    
+
     [Button("开始故事")]
     public async void StartSpaceStory()
     {
@@ -58,16 +60,14 @@ public class KPSpaceStoryManager
         {
             InitNpcSession(npcPair.Key, npcPair.Value);
         }
-        
-        
+
+
         GameFrameWork.Instance.ChatPanel.Init(playerChat, null, new KPStoryListener(async e =>
         {
             e.panel.submitBtn.gameObject.SetActive(false);
             await HandleUserInput(e);
             e.panel.submitBtn.gameObject.SetActive(true);
-        }, () =>
-        {
-        }));
+        }, () => { }));
 
         if (availableNpcs != null && availableNpcs.Count > 0)
         {
@@ -81,7 +81,7 @@ public class KPSpaceStoryManager
         var allNpcs = GameFrameWork.Instance.playerManager.allNpc;
         var pattern = @"[\u4e00-\u9fa5a-zA-Z0-9_]{2,10}";
         var matches = Regex.Matches(context, pattern);
-        
+
         foreach (Match match in matches)
         {
             var potentialName = match.Value;
@@ -108,7 +108,7 @@ public class KPSpaceStoryManager
                      "- 使用第三人称、描述性语言\n" +
                      "\n" +
                      "场景背景" +
-                     context+"\n"+
+                     context + "\n" +
                      "【输出格式要求】\n" +
                      "你必须严格按以下 JSON 输出：\n" +
                      "{\n" +
@@ -143,29 +143,77 @@ public class KPSpaceStoryManager
         npcChatSessions[npcName] = new GptChatSession(prompt);
     }
 
+
     private async Task HandleUserInput(ChatInput input)
     {
         var userStr = input.Content.Trim();
+        var selectedNpc = input.SelectedNpcName;
+
+        if (!string.IsNullOrEmpty(selectedNpc) && selectedNpc != "KP")
+        {
+            await HandleNpcDialogue(selectedNpc, userStr, input);
+        }
+        else
+        {
+            await HandleFreeInput(userStr, input);
+        }
+    }
+
+    private async Task HandleNpcDialogue(string npcName, string userStr, ChatInput input)
+    {
+        if (sceneNpcs.ContainsKey(npcName))
+        {
+            var npc = sceneNpcs[npcName];
+            var npcChat = npc.GetComponent<ChatComponent>();
+
+            if (npcChat != null && npcChatSessions.ContainsKey(npcName))
+            {
+                var session = npcChatSessions[npcName];
+
+                var constrain = "。【硬性规则 - 不可违背】\\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\\n你不能输出任何 JSON 以外的内容。" +
+                                GptSchemaBuilder.BuildSchema(typeof(ChatContext));
+                var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(session, userStr,
+                    constrain);
+
+                session.AddChatHistory("NPC", evt.message);
+                input.panel.AddMessage($"【{npcName}】{evt.message}");
+
+                await CheckForNewInformation(npcName, userStr, evt.message);
+            }
+            else
+            {
+                input.panel.AddMessage($"【系统】无法与 {npcName} 对话，该 NPC 没有 ChatComponent");
+            }
+        }
+        else
+        {
+            input.panel.AddMessage($"【系统】场景中不存在角色：{npcName}");
+        }
+    }
+
+    private async Task HandleFreeInput(string userStr, ChatInput input)
+    {
         var parsedInput = ParseUserInput(userStr);
-        
+
         if (parsedInput.IsDialogue)
         {
             if (sceneNpcs.ContainsKey(parsedInput.TargetNpc))
             {
                 var npc = sceneNpcs[parsedInput.TargetNpc];
                 var npcChat = npc.GetComponent<ChatComponent>();
-                
+
                 if (npcChat != null && npcChatSessions.ContainsKey(parsedInput.TargetNpc))
                 {
                     var session = npcChatSessions[parsedInput.TargetNpc];
-                    // session.AddChatHistory("Player", parsedInput.Message);
-                    
-                    var constrain = "。【硬性规则 - 不可违背】\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\n你不能输出任何 JSON 以外的内容。" + GptSchemaBuilder.BuildSchema(typeof(ChatContext));
-                    var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(session, parsedInput.Message, constrain);
-                    
+
+                    var constrain = "。【硬性规则 - 不可违背】\\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\\n你不能输出任何 JSON 以外的内容。" +
+                                    GptSchemaBuilder.BuildSchema(typeof(ChatContext));
+                    var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(session,
+                        parsedInput.Message, constrain);
+
                     session.AddChatHistory("NPC", evt.message);
                     input.panel.AddMessage($"【{parsedInput.TargetNpc}】{evt.message}");
-                    
+
                     await CheckForNewInformation(parsedInput.TargetNpc, parsedInput.Message, evt.message);
                 }
                 else
@@ -180,14 +228,16 @@ public class KPSpaceStoryManager
         }
         else
         {
-            // narratorSession.AddChatHistory("Player", userStr);
-            
-            var constrain = "。【硬性规则 - 不可违背】\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\n你不能输出任何 JSON 以外的内容。" + GptSchemaBuilder.BuildSchema(typeof(ChatContext));
-            var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(narratorSession, userStr, constrain);
-            
+            narratorSession.AddChatHistory("Player", userStr);
+
+            var constrain = "。【硬性规则 - 不可违背】\\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\\n你不能输出任何 JSON 以外的内容。" +
+                            GptSchemaBuilder.BuildSchema(typeof(ChatContext));
+            var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(narratorSession, userStr,
+                constrain);
+
             narratorSession.AddChatHistory("Narrator", evt.message);
             input.panel.AddMessage($"【画外音】{evt.message}");
-            
+
             await CheckForNewInformation("画外音", userStr, evt.message);
         }
     }
@@ -253,16 +303,15 @@ public class KPSpaceStoryManager
 
         if (!string.IsNullOrEmpty(result))
         {
-            hasFindThings += $"\n{result}";
-            // .panel.AddMessage($"【新发现】{result}");
+            hasFindThings += $"\\n{result}";
         }
     }
 
     private ParsedInput ParseUserInput(string input)
     {
         var result = new ParsedInput();
-        
-        var match1 = Regex.Match(input, @"对([\u4e00-\u9fa5a-zA-Z0-9_]+)说[：:](.+)");
+
+        var match1 = Regex.Match(input, @"对([\\u4e00-\\u9fa5a-zA-Z0-9_]+)说[：:](.+)");
         if (match1.Success)
         {
             result.IsDialogue = true;
@@ -270,8 +319,8 @@ public class KPSpaceStoryManager
             result.Message = match1.Groups[2].Value.Trim();
             return result;
         }
-        
-        var match2 = Regex.Match(input, @"^([\u4e00-\u9fa5a-zA-Z0-9_]+)[：:](.+)");
+
+        var match2 = Regex.Match(input, @"^([\\u4e00-\\u9fa5a-zA-Z0-9_]+)[：:](.+)");
         if (match2.Success && sceneNpcs.ContainsKey(match2.Groups[1].Value))
         {
             result.IsDialogue = true;
@@ -279,8 +328,8 @@ public class KPSpaceStoryManager
             result.Message = match2.Groups[2].Value.Trim();
             return result;
         }
-        
-        var match3 = Regex.Match(input, @"@([\u4e00-\u9fa5a-zA-Z0-9_]+)\s+(.+)");
+
+        var match3 = Regex.Match(input, @"@([\\u4e00-\\u9fa5a-zA-Z0-9_]+)\\s+(.+)");
         if (match3.Success)
         {
             result.IsDialogue = true;
@@ -288,7 +337,7 @@ public class KPSpaceStoryManager
             result.Message = match3.Groups[2].Value.Trim();
             return result;
         }
-        
+
         result.IsDialogue = false;
         result.Message = input;
         return result;
