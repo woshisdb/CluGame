@@ -10,10 +10,17 @@ public class KPSpaceStoryManager
 {
     public string context;
     public List<string> availableNpcs;
-    
     public Dictionary<string, NpcCardModel> sceneNpcs = new Dictionary<string, NpcCardModel>();
     public Dictionary<string, GptChatSession> npcChatSessions = new Dictionary<string, GptChatSession>();
     public GptChatSession narratorSession;
+    /// <summary>
+    /// 这里的重要信息有哪些
+    /// </summary>
+    public string importantThings;
+    /// <summary>
+    /// 已经发现的信息
+    /// </summary>
+    public string hasFindThings;
     
     [Button("开始故事")]
     public async void StartSpaceStory()
@@ -158,6 +165,8 @@ public class KPSpaceStoryManager
                     
                     session.AddChatHistory("NPC", evt.message);
                     input.panel.AddMessage($"【{parsedInput.TargetNpc}】{evt.message}");
+                    
+                    await CheckForNewInformation(parsedInput.TargetNpc, parsedInput.Message, evt.message);
                 }
                 else
                 {
@@ -178,6 +187,74 @@ public class KPSpaceStoryManager
             
             narratorSession.AddChatHistory("Narrator", evt.message);
             input.panel.AddMessage($"【画外音】{evt.message}");
+            
+            await CheckForNewInformation("画外音", userStr, evt.message);
+        }
+    }
+
+    private async Task CheckForNewInformation(string target, string playerInput, string npcResponse)
+    {
+        if (string.IsNullOrEmpty(importantThings))
+            return;
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【新信息发现器】。
+
+你的职责是：
+判断对话中是否发现了【重要信息】。
+
+规则：
+- 只判断，不创作
+- 基于已知的 importantThings 进行判断
+- 不重复已发现的信息"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"【已知重要信息列表】
+{importantThings}
+
+【已发现的信息】
+{hasFindThings}
+
+【对话目标】
+{target}
+
+【玩家输入】
+{playerInput}
+
+【NPC/画外音回复】
+{npcResponse}
+
+【你的任务】
+
+判断这次对话是否发现了【新的重要信息】。
+
+判断标准：
+- 信息必须不在""已发现的信息""中
+- 信息必须在""已知重要信息列表""中
+- 信息必须是具体的、可观察的
+
+输出要求：
+- 如果发现了新信息，返回新信息的描述
+- 如果没有发现新信息，返回空字符串
+- 只输出纯文本，不使用 JSON"
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem
+            .ChatToGPT(messages);
+
+        if (!string.IsNullOrEmpty(result))
+        {
+            hasFindThings += $"\n{result}";
+            // .panel.AddMessage($"【新发现】{result}");
         }
     }
 

@@ -17,6 +17,8 @@ public class KPWorldStoryManager
     public List<KPWorldStoryTask> kpTask;
     public string firstSceneContext;
     public List<string> availableNpcs;
+    public string importantThings;
+    public string hasFindThings;
     public KPSpaceStoryManager KPSpaceStoryManager;
     
     [Button]
@@ -33,16 +35,20 @@ public class KPWorldStoryManager
         await GenerateTasks(cocText);
         await GenerateFirstScene(cocText);
         await GenerateAvailableNpcs(cocText);
+        await GenerateImportantThings(cocText);
         
         Debug.Log("故事初始化完成！");
         Debug.Log($"任务数量: {kpTask?.Count ?? 0}");
         Debug.Log($"第一个场景: {firstSceneContext}");
         Debug.Log($"可对话角色: {string.Join(", ", availableNpcs ?? new List<string>())}");
+        Debug.Log($"重要信息: {importantThings}");
         
         var spaceManager = new KPSpaceStoryManager();
         this.KPSpaceStoryManager = spaceManager;
         spaceManager.context = firstSceneContext;
         spaceManager.availableNpcs = availableNpcs;
+        spaceManager.importantThings = importantThings;
+        spaceManager.hasFindThings = hasFindThings;
         spaceManager.StartSpaceStory();
     }
 
@@ -213,6 +219,63 @@ public class KPWorldStoryManager
             .ChatToGPT<AvailableNpcsResult>(messages);
 
         availableNpcs = result?.npcs ?? new List<string>();
+    }
+
+    private async Task GenerateImportantThings(string cocText)
+    {
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【重要信息发现器】。
+  
+你的职责是：
+从模组文本中提取【调查员可能发现的重要信息】。
+  
+规则：
+- 信息必须是可观察的、具体的
+- 信息必须与模组的核心剧情相关
+- 不生成背景介绍或氛围描述
+- 不生成过于细小的细节"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"【CoC 模组原文】
+{cocText}
+
+【首次接触场景】
+{firstSceneContext}
+
+【你的任务】
+
+从模组中提取【调查员可能发现的重要信息】。
+
+重要信息应包含：
+- 场景中的异常现象
+- 关键线索或物品
+- 角色的重要特征
+- 可能的威胁或危险
+
+输出要求：
+- 只输出纯文本
+- 不使用 JSON
+- 不使用编号或列表
+- 直接输出重要信息描述
+
+示例格式：
+场景中的异常现象包括：墙壁上似乎有模糊的污渍，像是某种液体留下的痕迹。嫌疑人B看起来紧张不安，手指不停地敲击桌面。审讯室的灯光昏暗，空气中弥漫着陈旧的烟草味。"
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem
+            .ChatToGPT(messages);
+
+        importantThings = result ?? string.Empty;
+        hasFindThings = string.Empty;
     }
 }
 
