@@ -9,10 +9,12 @@ using UnityEngine;
 public class KPSpaceStoryManager
 {
     public string context;
+    public List<string> availableNpcs;
     
     public Dictionary<string, NpcCardModel> sceneNpcs = new Dictionary<string, NpcCardModel>();
     public Dictionary<string, GptChatSession> npcChatSessions = new Dictionary<string, GptChatSession>();
     public GptChatSession narratorSession;
+    
     [Button("开始故事")]
     public async void StartSpaceStory()
     {
@@ -51,7 +53,7 @@ public class KPSpaceStoryManager
         }
         
         
-        GameFrameWork.Instance.ChatPanel.Init(playerChat,null, new KPStoryListener(async e =>
+        GameFrameWork.Instance.ChatPanel.Init(playerChat, null, new KPStoryListener(async e =>
         {
             e.panel.submitBtn.gameObject.SetActive(false);
             await HandleUserInput(e);
@@ -59,6 +61,11 @@ public class KPSpaceStoryManager
         }, () =>
         {
         }));
+
+        if (availableNpcs != null && availableNpcs.Count > 0)
+        {
+            GameFrameWork.Instance.ChatPanel.UpdateDropdownOptions(availableNpcs);
+        }
     }
 
     private void ParseSceneNpcs()

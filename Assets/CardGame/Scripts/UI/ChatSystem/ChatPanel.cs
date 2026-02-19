@@ -4,28 +4,19 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-
-using UnityEngine;
 using UnityEngine.UI;
 
 public class ChatInput
 {
-    public ChatComponent Speaker;   // 玩家ID
-    public ChatComponent TargetNpc; // 当前对话NPC
-    public string Content;     // 玩家输入文本
+    public ChatComponent Speaker;
+    public ChatComponent TargetNpc;
+    public string Content;
     public ChatPanel panel;
-}
-
-public interface IChatPanelListener
-{
-    Task OnSubmit(ChatInput input);
-    void OnClose();
 }
 
 
 public class ChatPanel : MonoBehaviour
 {
-    // Reference to the chat container UI to display messages
     [SerializeField] private ChatContainer chatContainer;
     public InputField inputField;
     private IChatPanelListener listener;
@@ -33,15 +24,40 @@ public class ChatPanel : MonoBehaviour
     private ChatComponent speaker;
     public Button submitBtn;
     public TMP_Dropdown Dropdown;
-    /// <summary>
-    /// 初始化
-    /// </summary>
-    public void Init(ChatComponent speaker,ChatComponent npcId, IChatPanelListener listener)
+
+    public void Init(ChatComponent speaker, ChatComponent npcId, IChatPanelListener listener)
     {
         this.listener = listener;
         this.currentNpcId = npcId;
         this.speaker = speaker;
         gameObject.SetActive(true);
+    }
+
+    public void UpdateDropdownOptions(List<string> options)
+    {
+        if (Dropdown == null)
+        {
+            Debug.LogWarning("Dropdown is not assigned!");
+            return;
+        }
+
+        Dropdown.ClearOptions();
+        
+        var dropdownOptions = new List<TMP_Dropdown.OptionData>();
+        foreach (var option in options)
+        {
+            dropdownOptions.Add(new TMP_Dropdown.OptionData(option));
+        }
+        
+        Dropdown.AddOptions(dropdownOptions);
+    }
+
+    public string GetSelectedOption()
+    {
+        if (Dropdown == null || Dropdown.options == null || Dropdown.options.Count == 0)
+            return string.Empty;
+        
+        return Dropdown.options[Dropdown.value].text;
     }
 
     public void Submit()
@@ -57,12 +73,8 @@ public class ChatPanel : MonoBehaviour
             panel = this,
         };
 
-        // Also display the player's message in the chat container UI
-        // so the conversation is visible immediately to the user
         chatContainer?.AddMessage(input.Content);
-        // Clear the input field for the next message
         inputField.text = string.Empty;
-        // Notify the listener about the submitted input
         listener?.OnSubmit(input);
     }
 
@@ -70,12 +82,18 @@ public class ChatPanel : MonoBehaviour
     {
         chatContainer.AddMessage(str);
     }
+
     public void Close()
     {
         listener?.OnClose();
-        // Clear chat messages when closing the panel
         chatContainer?.ClearAllMessages();
         gameObject.SetActive(false);
     }
-
 }
+
+public interface IChatPanelListener
+{
+    Task OnSubmit(ChatInput input);
+    void OnClose();
+}
+
