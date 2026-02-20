@@ -85,9 +85,9 @@ public static class CocCheckUtil
 /// <summary>
 /// 自动 KP：叙事判定系统（核心）
 /// </summary>
-public class NarrativeCheck
+public class NarrativeCheck:MonoBehaviour
 {
-    private RollSystem rollSystem;
+    public RollSystem rollSystem;
 
     public NarrativeCheck(RollSystem rollSystem)
     {

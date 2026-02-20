@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Random = UnityEngine.Random;
 public enum CocCheckResult
 {
@@ -12,7 +13,7 @@ public enum CocCheckResult
     Fumble             // 大失败（96-00 或阈值以上）
 }
 
-public class RollSystem
+public class RollSystem:MonoBehaviour
 {
     /// <summary>
     /// CoC 百分骰检定

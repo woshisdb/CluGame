@@ -99,6 +99,14 @@ public class ChatPanel : MonoBehaviour
         chatContainer?.ClearAllMessages();
         gameObject.SetActive(false);
     }
+    /// <summary>
+    /// 调用函数
+    /// </summary>
+    /// <param name="str"></param>
+    public void CallFunc(string str)
+    {
+        
+    }
 }
 
 public interface IChatPanelListener
