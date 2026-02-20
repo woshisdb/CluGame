@@ -239,7 +239,8 @@ public class KPSpaceStoryManager
             
             if (checkResult != null)
             {
-                constrain += $"\n\n【本次技能检定结果】\n{checkResult}";
+                var outcomePrompt = BuildOutcomePrompt(checkResult);
+                constrain += outcomePrompt;
             }
             
             var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(narratorSession, userStr,
@@ -364,13 +365,13 @@ public class KPSpaceStoryManager
         await Task.CompletedTask;
     }
 
-    private async Task<string> CheckPlayerAction(string playerInput, ChatInput input)
+    private async Task<ActionCheckResult> CheckPlayerAction(string playerInput, ChatInput input)
     {
         var needCheckResult = await AskGptIfNeedCheck(playerInput);
         
         if (!needCheckResult.needCheck)
         {
-            return null;
+            return new ActionCheckResult { needCheck = false };
         }
 
         var skillName = needCheckResult.skillName;
@@ -379,19 +380,19 @@ public class KPSpaceStoryManager
         var player = GameFrameWork.Instance.playerManager.nowPlayer;
         if (player == null)
         {
-            return null;
+            return new ActionCheckResult { needCheck = false };
         }
 
         var skillComponent = player.GetComponent<SkillComponent>();
         if (skillComponent == null)
         {
-            return null;
+            return new ActionCheckResult { needCheck = false };
         }
 
         if (!System.Enum.TryParse<NpcSkill>(skillName, out var skill))
         {
             input.panel.AddMessage($"【系统】未找到技能: {skillName}");
-            return null;
+            return new ActionCheckResult { needCheck = false };
         }
 
         var skillValue = skillComponent.GetNowSkill(skill);
@@ -413,16 +414,14 @@ public class KPSpaceStoryManager
         
         input.panel.AddMessage(checkInfo);
 
-        if (requiredLevel != null && !string.IsNullOrEmpty(requiredLevel))
+        return new ActionCheckResult
         {
-            if (System.Enum.TryParse<CocCheckResult>(requiredLevel, out var required))
-            {
-                bool passed = CocCheckUtil.IsSuccessAtLeast(rollResult, required);
-                return $"{checkInfo}\n要求: {required} | 结果: {(passed ? "通过" : "未通过")}";
-            }
-        }
-
-        return checkInfo;
+            needCheck = true,
+            skillName = skillName,
+            skillValue = skillValue,
+            roll = roll,
+            result = rollResult
+        };
     }
 
     private class GptCheckResult
@@ -430,6 +429,58 @@ public class KPSpaceStoryManager
         public bool needCheck;
         public string skillName;
         public string requiredLevel;
+    }
+
+    private class ActionCheckResult
+    {
+        public bool needCheck;
+        public string skillName;
+        public int skillValue;
+        public int roll;
+        public CocCheckResult result;
+    }
+
+    private string BuildOutcomePrompt(ActionCheckResult check)
+    {
+        if (!check.needCheck || check.result == null)
+        {
+            return "";
+        }
+
+        var resultDesc = check.result switch
+        {
+            CocCheckResult.CriticalSuccess => "大成功（ Extraordinary Success）- 超出预期的好结果",
+            CocCheckResult.ExtremeSuccess => "极难成功（ Extreme Success）- 非常出色的表现",
+            CocCheckResult.HardSuccess => "困难成功（ Hard Success）- 勉强但成功",
+            CocCheckResult.Success => "普通成功（ Success）- 达到预期",
+            CocCheckResult.Failure => "失败（ Failure）- 未达到要求",
+            CocCheckResult.Fumble => "大失败（ Fumble）- 糟糕的结果，比预期更差",
+            _ => "失败"
+        };
+
+        var outcomeGuidance = check.result switch
+        {
+            CocCheckResult.CriticalSuccess => "叙事结果：玩家表现完美，结果远超预期。你应该描述一个特别出色、超出玩家想象的好结果。",
+            CocCheckResult.ExtremeSuccess => "叙事结果：玩家表现极其出色。你应该描述一个非常好的结果，玩家成功完成任务且有额外收获。",
+            CocCheckResult.HardSuccess => "叙事结果：玩家勉强成功。你应该描述成功但有些勉强，可能需要付出一些小代价。",
+            CocCheckResult.Success => "叙事结果：玩家正常成功。你应该描述符合预期的成功结果。",
+            CocCheckResult.Failure => "叙事结果：玩家失败。你应该描述失败的结果，行动未能完成。",
+            CocCheckResult.Fumble => "叙事结果：大失败。你应该描述一个糟糕的结果，可能带来负面后果或意外情况。",
+            _ => "叙事结果：失败。"
+        };
+
+        return $@"
+
+【技能检定结果】
+技能: {check.skillName}
+技能值: {check.skillValue}
+投骰: {check.roll}
+结果: {resultDesc}
+
+【叙事指引】
+{outcomeGuidance}
+
+请根据上述检定结果生成叙事内容。";
     }
 
     private async Task<GptCheckResult> AskGptIfNeedCheck(string playerInput)
