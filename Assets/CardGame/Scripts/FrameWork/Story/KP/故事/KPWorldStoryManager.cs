@@ -167,9 +167,8 @@ public class KPWorldStoryManager
     private async Task GenerateAvailableNpcs(string cocText)
     {
         var typedDict = KPSystem.Load<Dictionary<string, CocDicItem>>("数据字典_typed");
-        var characterNpcs = typedDict
-            .Where(kv => kv.Value.type == "character")
-            .Select(kv => kv.Key)
+        var characterNpcs = GameFrameWork.Instance.playerManager.allNpc
+            .Select(kv => kv.npcId)
             .ToList();
 
         var schema = GptSchemaBuilder.BuildSchema(typeof(AvailableNpcsResult));
@@ -211,6 +210,9 @@ public class KPWorldStoryManager
 角色列表必须包含：
 - KP（克苏鲁跑团的主持人）
 - 场景中出现的其他可对话角色
+
+注意：
+-你的返回角色名字必须与已知角色列表的名字相同
 
 输出要求：
 - 返回 JSON 对象

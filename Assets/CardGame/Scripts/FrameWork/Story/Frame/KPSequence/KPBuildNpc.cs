@@ -102,7 +102,13 @@ public class KPBuildNpc
             Debug.Log($"{kv.Key}:\n{kv.Value}");
         }
         KPSystem.Save("生成地图的原始数据",finalPlaceTxt);
+        
         KPSystem.Save("NPC归属地点信息",npcPlaceDic);
+    }
+    [Button("生成地图的原始数据")]
+    public void SaveOriginalData(string str)
+    {
+        KPSystem.Save("生成地图的原始数据",str);
     }
     [Button("细化场景信息")]
     public async Task GenerateMoreDetail()

@@ -311,7 +311,7 @@ public class SpaceNode
         foreach (var x in spaceNodes)
         {
             var y = bindRet.Find(e => { return e.name == x.name; });
-            if (bindRet!=null)
+            if (y!=null)
             {
                 foreach (var node in x.leafSpaces)
                 {
@@ -766,7 +766,7 @@ public class SpaceNode
     // 叶子空间（原始 SpaceCard）
     public List<string> leafSpaces = new();
 }}
-
+其中leafSpaces的每个字符串只对应SpaceNode的name，不要有其他的
 只输出 JSON。
 "
             }

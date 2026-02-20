@@ -6,6 +6,11 @@ using UnityEngine;
 
 public class KPFilterStory
 {
+    [Button]
+    public void ReadPdfText()
+    {
+        KPSystem.ReadPdfText();
+    }
     /// <summary>
     /// 第一步把PDF整理成文本信息,再精简下模组
     /// </summary>

@@ -79,16 +79,12 @@ public class KPSpaceStoryManager
     {
         sceneNpcs.Clear();
         var allNpcs = GameFrameWork.Instance.playerManager.allNpc;
-        var pattern = @"[\u4e00-\u9fa5a-zA-Z0-9_]{2,10}";
-        var matches = Regex.Matches(context, pattern);
-
-        foreach (Match match in matches)
+        foreach (var x in availableNpcs)
         {
-            var potentialName = match.Value;
-            var npc = allNpcs.Find(n => n.npcId == potentialName);
-            if (npc != null && !sceneNpcs.ContainsKey(potentialName))
+            var npc = allNpcs.Find(n => n.npcId == x);
+            if (npc != null && !sceneNpcs.ContainsKey(x))
             {
-                sceneNpcs[potentialName] = npc;
+                sceneNpcs[x] = npc;
             }
         }
     }

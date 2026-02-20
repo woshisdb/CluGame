@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -44,6 +45,11 @@ public class SpaceCardConfig:BaseCardConfig,CardSObj<SpaceEnum>
 
         return null;
     }
+
+    public SpaceCardConfig() : base()
+    {
+        
+    }
 }
 
 public class SpaceCreatorRef
@@ -58,11 +64,19 @@ public class SpaceCreatorRef
     [Button]
     public SpaceCardConfig CreateCfg()
     {
-        var cfg = new SpaceCardConfig();
-        cfg.title = name;
-        cfg.descirption = detail;
-        cfg.ComponentCreators.Add(new DrawLineComponentCreator());
-        cfg.ComponentCreators.Add(new PathComponentCreator());
-        return cfg;
+        try
+        {
+            var cfg = new SpaceCardConfig();
+            cfg.title = name;
+            cfg.descirption = detail;
+            cfg.ComponentCreators.Add(new DrawLineComponentCreator());
+            cfg.ComponentCreators.Add(new PathComponentCreator());
+            return cfg;
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            throw;
+        }
     }
 }

@@ -474,7 +474,7 @@ WorldStorySegment行为段必须包含：
             .ChatToGPT<CocDic>(messages);
     }
     [Button]
-    public string ReadPdfText()
+    public static string ReadPdfText()
     {
         var path = "Assets/Resources/Coc模组/模组.pdf";
         var sb = new StringBuilder();
