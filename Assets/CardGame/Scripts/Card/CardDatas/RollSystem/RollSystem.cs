@@ -60,7 +60,7 @@ public class RollSystem:MonoBehaviour
     /// <summary>
     /// 根据掷骰和技能值解析 CoC 判定结果
     /// </summary>
-    private CocCheckResult ResolveResult(int roll, int skill)
+    public CocCheckResult ResolveResult(int roll, int skill)
     {
         // 大成功
         if (roll == 1)

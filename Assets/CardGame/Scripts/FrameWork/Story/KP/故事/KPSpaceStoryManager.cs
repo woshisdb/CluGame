@@ -189,6 +189,12 @@ public class KPSpaceStoryManager
 
     private async Task HandleFreeInput(string userStr, ChatInput input)
     {
+        if (RAParser.TryParse(userStr, out var raCommand))
+        {
+            await HandleRACommand(raCommand, input);
+            return;
+        }
+
         var parsedInput = ParseUserInput(userStr);
 
         if (parsedInput.IsDialogue)
@@ -224,10 +230,18 @@ public class KPSpaceStoryManager
         }
         else
         {
+            var checkResult = await CheckPlayerAction(userStr, input);
+            
             narratorSession.AddChatHistory("Player", userStr);
 
             var constrain = "。【硬性规则 - 不可违背】\\n你是个Json格式输出工具，你每一次回复都【必须】【只能】输出合法 JSON。\\n你不能输出任何 JSON 以外的内容。" +
                             GptSchemaBuilder.BuildSchema(typeof(ChatContext));
+            
+            if (checkResult != null)
+            {
+                constrain += $"\n\n【本次技能检定结果】\n{checkResult}";
+            }
+            
             var evt = await GameFrameWork.Instance.GptSystem.ChatInSession<ChatContext>(narratorSession, userStr,
                 constrain);
 
@@ -301,6 +315,163 @@ public class KPSpaceStoryManager
         {
             hasFindThings += $"\\n{result}";
         }
+    }
+
+    private async Task HandleRACommand(RACommand command, ChatInput input)
+    {
+        var rollSystem = GameFrameWork.Instance.rollSystem;
+        if (rollSystem == null)
+        {
+            input.panel.AddMessage("【系统】骰子系统未初始化");
+            return;
+        }
+
+        var results = new List<string>();
+        var skillNameStr = string.IsNullOrEmpty(command.SkillName) ? "" : $"【{command.SkillName}】";
+
+        for (int i = 0; i < command.Count; i++)
+        {
+            int roll = UnityEngine.Random.Range(1, 101);
+            var result = rollSystem.ResolveResult(roll, command.TargetValue);
+            
+            var resultText = result switch
+            {
+                CocCheckResult.CriticalSuccess => "大成功!!",
+                CocCheckResult.ExtremeSuccess => "极难成功",
+                CocCheckResult.HardSuccess => "困难成功",
+                CocCheckResult.Success => "成功",
+                CocCheckResult.Failure => "失败",
+                CocCheckResult.Fumble => "大失败..",
+                _ => "失败"
+            };
+
+            var bonusStr = command.BonusType switch
+            {
+                BonusType.Bonus => " (奖励骰)",
+                BonusType.Penalty => " (惩罚骰)",
+                _ => ""
+            };
+
+            var countStr = command.Count > 1 ? $" [{i + 1}/{command.Count}]" : "";
+            results.Add($"{skillNameStr}技能{command.TargetValue} | 投骰{roll}{bonusStr} → {resultText}{countStr}");
+        }
+
+        foreach (var r in results)
+        {
+            input.panel.AddMessage(r);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task<string> CheckPlayerAction(string playerInput, ChatInput input)
+    {
+        var needCheckResult = await AskGptIfNeedCheck(playerInput);
+        
+        if (!needCheckResult.needCheck)
+        {
+            return null;
+        }
+
+        var skillName = needCheckResult.skillName;
+        var requiredLevel = needCheckResult.requiredLevel;
+
+        var player = GameFrameWork.Instance.playerManager.nowPlayer;
+        if (player == null)
+        {
+            return null;
+        }
+
+        var skillComponent = player.GetComponent<SkillComponent>();
+        if (skillComponent == null)
+        {
+            return null;
+        }
+
+        if (!System.Enum.TryParse<NpcSkill>(skillName, out var skill))
+        {
+            input.panel.AddMessage($"【系统】未找到技能: {skillName}");
+            return null;
+        }
+
+        var skillValue = skillComponent.GetNowSkill(skill);
+        var roll = UnityEngine.Random.Range(1, 101);
+        var rollResult = GameFrameWork.Instance.rollSystem.ResolveResult(roll, skillValue);
+        
+        var resultText = rollResult switch
+        {
+            CocCheckResult.CriticalSuccess => "大成功!!",
+            CocCheckResult.ExtremeSuccess => "极难成功",
+            CocCheckResult.HardSuccess => "困难成功",
+            CocCheckResult.Success => "成功",
+            CocCheckResult.Failure => "失败",
+            CocCheckResult.Fumble => "大失败..",
+            _ => "失败"
+        };
+
+        var checkInfo = $"技能检定:{skillName}({skillValue})|投骰:{roll}|{resultText}";
+        
+        input.panel.AddMessage(checkInfo);
+
+        if (requiredLevel != null && !string.IsNullOrEmpty(requiredLevel))
+        {
+            if (System.Enum.TryParse<CocCheckResult>(requiredLevel, out var required))
+            {
+                bool passed = CocCheckUtil.IsSuccessAtLeast(rollResult, required);
+                return $"{checkInfo}\n要求: {required} | 结果: {(passed ? "通过" : "未通过")}";
+            }
+        }
+
+        return checkInfo;
+    }
+
+    private class GptCheckResult
+    {
+        public bool needCheck;
+        public string skillName;
+        public string requiredLevel;
+    }
+
+    private async Task<GptCheckResult> AskGptIfNeedCheck(string playerInput)
+    {
+        var skillList = string.Join(", ", new[]
+        {
+            "strength", "constitution", "size", "dexterity", "appearance", "intelligence", "power", "education",
+            "luck", "sanity", "health", "spotHidden", "listen", "psychology", "occult", "cthulhuMythos",
+            "archaeology", "history", "creditRating", "firstAid", "medicine", "mechanicalRepair", "electricalRepair",
+            "electronics", "drive", "dodge", "persuade", "stealth", "brawl", "firearms", "fastTalk",
+            "locksmith", "linguistics", "disguise", "animalTraining", "performance", "astronomy", "charm",
+            "climb", "fineArt", "intimidate", "libraryUse", "psychoanalysis", "track", "throwing"
+        });
+
+        var messages = new List<QwenChatMessage>
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content = @"你是一个动作分析器，判断玩家的动作是否需要技能检定。"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content = $@"【玩家动作】
+{playerInput}
+
+【可用技能列表】（必须使用以下英文技能名之一）:
+{skillList}
+
+请判断：
+1. 是否需要技能检定？（简单动作如普通交谈、开门、走路不需要）
+2. 需要什么技能？（必须从上方列表中选择，使用英文技能名）
+3. 需要什么成功等级？（可选：Success, HardSuccess, ExtremeSuccess）
+
+请用以下JSON格式返回：
+{{""needCheck"": true/false, ""skillName"": ""技能名"", ""requiredLevel"": ""成功等级""}}"
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem.ChatToGPT<GptCheckResult>(messages);
+        return result ?? new GptCheckResult { needCheck = false };
     }
 
     private ParsedInput ParseUserInput(string input)
