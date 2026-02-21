@@ -21,6 +21,7 @@ public class KPWorldStoryManager
     public string importantThings;
     public string hasFindThings;
     public KPSpaceStoryManager KPSpaceStoryManager;
+    public KPWorldMapManager worldMapManager;
     
     [Button]
     public async void StartStory()
@@ -33,6 +34,13 @@ public class KPWorldStoryManager
             return;
         }
 
+        worldMapManager = new KPWorldMapManager();
+        
+        if (GameFrameWork.Instance.KP != null)
+        {
+            GameFrameWork.Instance.KP.kpWorldManager = worldMapManager;
+        }
+        
         await GenerateTasks(cocText);
         await GenerateFirstScene(cocText);
         await GenerateAvailableNpcs(cocText);
@@ -51,6 +59,7 @@ public class KPWorldStoryManager
         spaceManager.availableNpcs = availableNpcs;
         spaceManager.importantThings = importantThings;
         spaceManager.hasFindThings = hasFindThings;
+        spaceManager.worldMapManager = worldMapManager;
         spaceManager.StartSpaceStory();
     }
 

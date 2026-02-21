@@ -15,6 +15,11 @@ public class KPSpaceStoryManager
     public GptChatSession narratorSession;
 
     /// <summary>
+    /// 世界地图管理器引用
+    /// </summary>
+    public KPWorldMapManager worldMapManager;
+
+    /// <summary>
     /// 这里的重要信息有哪些
     /// </summary>
     public string importantThings;
@@ -31,6 +36,12 @@ public class KPSpaceStoryManager
         {
             Debug.LogError("Context is empty!");
             return;
+        }
+
+        if (GameFrameWork.Instance.KP != null && GameFrameWork.Instance.KP.kpWorldManager != null)
+        {
+            worldMapManager = GameFrameWork.Instance.KP.kpWorldManager;
+            worldMapManager.InitWorldMap();
         }
 
         var player = GameFrameWork.Instance.playerManager.nowPlayer;
@@ -193,6 +204,26 @@ public class KPSpaceStoryManager
         {
             await HandleRACommand(raCommand, input);
             return;
+        }
+
+        if (worldMapManager != null)
+        {
+            var moveIntent = await worldMapManager.DetectMoveIntent(userStr);
+            if (moveIntent.wantsToMove)
+            {
+                input.panel.AddMessage($"【系统】正在前往 {moveIntent.targetLocation}...");
+                
+                var newStoryManager = await worldMapManager.SwitchToLocation(
+                    moveIntent.targetLocation, 
+                    context
+                );
+                
+                if (newStoryManager != null)
+                {
+                    input.panel.AddMessage($"【系统】已到达 {moveIntent.targetLocation}，故事继续...");
+                    return;
+                }
+            }
         }
 
         var parsedInput = ParseUserInput(userStr);

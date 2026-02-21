@@ -25,7 +25,7 @@ public class ChatPanel : MonoBehaviour
     private ChatComponent speaker;
     public Button submitBtn;
     public TMP_Dropdown Dropdown;
-
+    public TextMeshProUGUI nowPlace;
     public void Init(ChatComponent speaker, ChatComponent npcId, IChatPanelListener listener)
     {
         this.listener = listener;
