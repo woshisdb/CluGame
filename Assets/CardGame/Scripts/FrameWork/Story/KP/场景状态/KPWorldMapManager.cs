@@ -91,6 +91,27 @@ public class KPWorldMapManager
         
         return await GenerateNewPlace(description);
     }
+    public SpaceCardModel FindOrCreateSpace(string name, string description)
+    {
+        if (worldLocations.ContainsKey(name))
+        {
+            return worldLocations[name].spaceModel;
+        }
+
+        var spaces = GetAllSpaces();
+        foreach (var space in spaces)
+        {
+            if (space.space.title == name)
+            {
+                return space;
+            }
+        }
+
+        Debug.LogWarning($"Space not found: {name}");
+        return null;
+    }
+
+    /// <summary>
 
     /// <summary>
     /// 根据描述生成新地点
@@ -194,11 +215,18 @@ JSON格式：
         
         var newStoryManager = new KPSpaceStoryManager
         {
-            context = cocText
+            context = cocText,
+            worldMapManager = this
         };
 
         currentStoryManager = newStoryManager;
         newStoryManager.StartSpaceStory();
+
+        var spaceName = targetSpace.space.title;
+        if (GameFrameWork.Instance.ChatPanel != null)
+        {
+            GameFrameWork.Instance.ChatPanel.SetPlace(spaceName);
+        }
 
         return newStoryManager;
     }

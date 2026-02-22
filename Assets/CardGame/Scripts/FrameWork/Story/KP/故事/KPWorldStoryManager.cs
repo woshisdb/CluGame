@@ -52,7 +52,17 @@ public class KPWorldStoryManager
         Debug.Log($"第一个场景名称: {firstSceneName}");
         Debug.Log($"可对话角色: {string.Join(", ", availableNpcs ?? new List<string>())}");
         Debug.Log($"重要信息: {importantThings}");
-        
+
+        worldMapManager.InitWorldMap();
+
+        var firstSpace = worldMapManager.FindOrCreateSpace(firstSceneName, firstSceneContext);
+        worldMapManager.currentSpace = firstSpace;
+
+        if (GameFrameWork.Instance.ChatPanel != null)
+        {
+            GameFrameWork.Instance.ChatPanel.SetPlace(firstSceneName);
+        }
+
         var spaceManager = new KPSpaceStoryManager();
         this.KPSpaceStoryManager = spaceManager;
         spaceManager.context = firstSceneContext;

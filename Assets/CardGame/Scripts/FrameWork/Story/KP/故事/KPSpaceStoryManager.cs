@@ -80,6 +80,12 @@ public class KPSpaceStoryManager
             e.panel.submitBtn.gameObject.SetActive(true);
         }, () => { }));
 
+        if (worldMapManager != null && worldMapManager.currentSpace != null)
+        {
+            var spaceName = worldMapManager.currentSpace.space.title;
+            GameFrameWork.Instance.ChatPanel.SetPlace(spaceName);
+        }
+
         if (availableNpcs != null && availableNpcs.Count > 0)
         {
             GameFrameWork.Instance.ChatPanel.UpdateDropdownOptions(availableNpcs);
@@ -211,7 +217,7 @@ public class KPSpaceStoryManager
             var moveIntent = await worldMapManager.DetectMoveIntent(userStr);
             if (moveIntent.wantsToMove)
             {
-                input.panel.AddMessage($"【系统】正在前往 {moveIntent.targetLocation}...");
+                input.panel.AddMessage($"【系统】正在前往｜{moveIntent.targetLocation}...");
                 
                 var newStoryManager = await worldMapManager.SwitchToLocation(
                     moveIntent.targetLocation, 
@@ -220,7 +226,7 @@ public class KPSpaceStoryManager
                 
                 if (newStoryManager != null)
                 {
-                    input.panel.AddMessage($"【系统】已到达 {moveIntent.targetLocation}，故事继续...");
+                    input.panel.AddMessage($"【系统】已到达｜{moveIntent.targetLocation}，故事继续...");
                     return;
                 }
             }
