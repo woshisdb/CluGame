@@ -29,6 +29,11 @@ public class KPSpaceStoryManager
     /// </summary>
     public string hasFindThings;
 
+    /// <summary>
+    /// 模组背景文本（用于生成NPC和重要信息）
+    /// </summary>
+    public string cocText;
+
     [Button("开始故事")]
     public async Task StartSpaceStory()
     {
@@ -93,12 +98,161 @@ public class KPSpaceStoryManager
             GameFrameWork.Instance.ChatPanel.UpdateDropdownOptions(availableNpcs);
         }
         
+        // 生成当前场景的NPC和重要信息
+        await GenerateSceneInfo();
+        
         }
         catch (Exception e)
         {
             Debug.Log(e);
             throw;
         }
+    }
+
+    /// <summary>
+    /// 生成当前场景的NPC和重要信息
+    /// </summary>
+    private async Task GenerateSceneInfo()
+    {
+        // 如果没有cocText，则尝试从KPWorldStoryManager获取
+        if (string.IsNullOrEmpty(cocText) && GameFrameWork.Instance.KP?.KpWorldStoryManager != null)
+        {
+            cocText = KPSystem.Load("模组精简");
+        }
+
+        if (!string.IsNullOrEmpty(cocText))
+        {
+            await GenerateAvailableNpcs(cocText);
+            await GenerateImportantThings(cocText);
+        }
+    }
+
+    private async Task GenerateAvailableNpcs(string cocText)
+    {
+        var characterNpcs = GameFrameWork.Instance.playerManager.allNpc
+            .Select(kv => kv.npcId)
+            .ToList();
+
+        var schema = GptSchemaBuilder.BuildSchema(typeof(AvailableNpcsResult));
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【可对话角色提取器】。
+ 
+你的职责是：
+从模组文本中提取【调查员可以与之对话的角色】。
+ 
+规则：
+- 角色必须是模组中明确存在的
+- 角色必须在当前场景中出现
+- 包含 KP（主持人）作为可对话对象
+- 不包含普通背景角色"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"【CoC 模组原文】
+{cocText}
+
+【当前场景描述】
+{context}
+
+【已知角色列表】
+{string.Join(", ", characterNpcs)}
+
+【你的任务】
+
+从当前场景中提取【调查员可以与之对话的角色】。
+
+角色列表必须包含：
+- KP（克苏鲁跑团的主持人）
+- 场景中出现的其他可对话角色
+
+注意：
+- 你的返回角色名字必须与已知角色列表的名字相同
+
+输出要求：
+- 返回 JSON 对象
+- 只输出 JSON，不输出其他内容
+
+示例格式：
+{{
+  ""npcs"": [""KP"", ""角色A"", ""角色B""]
+}}"
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem
+            .ChatToGPT<AvailableNpcsResult>(messages);
+
+        availableNpcs = result?.npcs ?? new List<string>();
+    }
+
+    private async Task GenerateImportantThings(string cocText)
+    {
+        var sceneName = worldMapManager?.currentSpace?.space?.title ?? "未知场景";
+
+        var messages = new[]
+        {
+            new QwenChatMessage
+            {
+                role = "system",
+                content =
+                    @"你是一个《克苏鲁的呼唤（Call of Cthulhu）》模组的【场景重要信息提取器】。
+
+你的职责是：
+从【指定场景】中提取【调查员在该场景可能发现的重要信息】。
+
+规则：
+- 信息必须是可观察的、具体的
+- 信息必须与该场景相关
+- 不生成背景介绍或氛围描述
+- 不生成过于细小的细节"
+            },
+            new QwenChatMessage
+            {
+                role = "user",
+                content =
+                    $@"【CoC 模组原文】
+{cocText}
+
+【场景名称】
+{sceneName}
+
+【场景描述】
+{context}
+
+【你的任务】
+
+从【场景描述】中提取【调查员在该场景可能发现的重要信息】。
+
+重要信息应包含：
+- 该场景中的异常现象
+- 该场景中的关键线索或物品
+- 该场景中角色的重要特征
+- 该场景中可能的威胁或危险
+
+输出要求：
+- 只输出纯文本
+- 不使用 JSON
+- 不使用编号或列表
+- 直接输出重要信息描述
+
+示例格式：
+墙壁上似乎有模糊的污渍，像是某种液体留下的痕迹。嫌疑人B看起来紧张不安，手指不停地敲击桌面。审讯室的灯光昏暗，空气中弥漫着陈旧的烟草味。"
+            }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem
+            .ChatToGPT(messages);
+
+        importantThings = result ?? string.Empty;
+        hasFindThings = string.Empty;
     }
 
     private void ParseSceneNpcs()
