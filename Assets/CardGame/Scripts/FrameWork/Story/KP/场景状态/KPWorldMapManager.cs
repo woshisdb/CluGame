@@ -150,14 +150,17 @@ JSON格式：
             Debug.Log($"未找到地点，正在生成新地点: {locationName}");
             var newPlaceDescription = await GeneratePlaceDescription(locationName, cocText);
             
+            // 使用 WorldMapSystem.AddSpaceCard 创建新的 SpaceCardModel
+            var newSpaceCardModel = GameFrameWork.Instance.WorldMapSystem.AddSpaceCard(locationName, newPlaceDescription);
+            
             var newLocation = new WorldLocation
             {
                 name = locationName,
                 description = newPlaceDescription,
-                spaceModel = null
+                spaceModel = newSpaceCardModel
             };
             worldLocations[locationName] = newLocation;
-            currentSpace = null;
+            currentSpace = newSpaceCardModel;
             
             var newStoryManager1 = new KPSpaceStoryManager
             {
