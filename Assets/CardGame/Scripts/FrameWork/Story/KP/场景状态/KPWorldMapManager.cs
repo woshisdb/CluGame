@@ -160,8 +160,6 @@ JSON格式：
             currentSpace = null;
             
             var newStoryManager1 = new KPSpaceStoryManager
-            
-            var newStoryManager1 = new KPSpaceStoryManager
             {
                 context = newPlaceDescription,
                 worldMapManager = this
