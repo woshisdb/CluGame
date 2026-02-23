@@ -22,7 +22,7 @@ public class KPWorldStoryManager
     public string hasFindThings;
     public KPSpaceStoryManager KPSpaceStoryManager;
     public KPWorldMapManager worldMapManager;
-    
+    public List<KPSpaceStoryManager> AllKpSpaceManager;
     [Button]
     public async void StartStory()
     {
@@ -64,7 +64,8 @@ public class KPWorldStoryManager
         }
 
         var spaceManager = new KPSpaceStoryManager();
-        this.KPSpaceStoryManager = spaceManager;
+        // this.KPSpaceStoryManager = spaceManager;
+        SetNowSpaceManager(spaceManager);
         spaceManager.context = firstSceneContext;
         spaceManager.availableNpcs = availableNpcs;
         spaceManager.importantThings = importantThings;
@@ -73,6 +74,11 @@ public class KPWorldStoryManager
         spaceManager.StartSpaceStory();
     }
 
+    public void SetNowSpaceManager(KPSpaceStoryManager KPSpaceStoryManager)
+    {
+        this.KPSpaceStoryManager = KPSpaceStoryManager;
+        AllKpSpaceManager.Add(KPSpaceStoryManager);
+    }
     private async Task GenerateTasks(string cocText)
     {
         var messages = new[]

@@ -232,6 +232,7 @@ public class KPSpaceStoryManager
                     moveIntent.targetLocation, 
                     context
                 );
+                GameFrameWork.Instance.KP.KpWorldStoryManager.SetNowSpaceManager(newStoryManager);
                 await newStoryManager.StartSpaceStory();
                 if (newStoryManager != null)
                 {
