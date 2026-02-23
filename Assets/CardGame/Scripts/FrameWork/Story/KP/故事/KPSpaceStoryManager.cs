@@ -9,7 +9,7 @@ using UnityEngine;
 public class KPSpaceStoryManager
 {
     public string context;
-    public List<string> availableNpcs;
+    public List<string> availableNpcs=new List<string>();
     public Dictionary<string, NpcCardModel> sceneNpcs = new Dictionary<string, NpcCardModel>();
     public Dictionary<string, GptChatSession> npcChatSessions = new Dictionary<string, GptChatSession>();
     public GptChatSession narratorSession;
@@ -30,8 +30,10 @@ public class KPSpaceStoryManager
     public string hasFindThings;
 
     [Button("开始故事")]
-    public async void StartSpaceStory()
+    public async Task StartSpaceStory()
     {
+        try
+        {
         if (string.IsNullOrEmpty(context))
         {
             Debug.LogError("Context is empty!");
@@ -71,8 +73,8 @@ public class KPSpaceStoryManager
         {
             InitNpcSession(npcPair.Key, npcPair.Value);
         }
-
-
+        
+        GameFrameWork.Instance.ChatPanel.Close();
         GameFrameWork.Instance.ChatPanel.Init(playerChat, null, new KPStoryListener(async e =>
         {
             e.panel.submitBtn.gameObject.SetActive(false);
@@ -89,6 +91,13 @@ public class KPSpaceStoryManager
         if (availableNpcs != null && availableNpcs.Count > 0)
         {
             GameFrameWork.Instance.ChatPanel.UpdateDropdownOptions(availableNpcs);
+        }
+        
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            throw;
         }
     }
 
@@ -223,10 +232,10 @@ public class KPSpaceStoryManager
                     moveIntent.targetLocation, 
                     context
                 );
-                
+                await newStoryManager.StartSpaceStory();
                 if (newStoryManager != null)
                 {
-                    input.panel.AddMessage($"【系统】已到达｜{moveIntent.targetLocation}，故事继续...");
+                    GameFrameWork.Instance.ChatPanel.AddMessage($"【系统】已到达｜{moveIntent.targetLocation}，故事继续...");
                     return;
                 }
             }

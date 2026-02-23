@@ -10,9 +10,6 @@ public class GptRet<T>
     public string description;
 }
 
-/// <summary>
-/// 世界地图中的位置信息
-/// </summary>
 public class WorldLocation
 {
     public string name;
@@ -22,9 +19,6 @@ public class WorldLocation
     public string region;
 }
 
-/// <summary>
-/// 玩家移动意图
-/// </summary>
 public class PlayerMoveIntent
 {
     public bool wantsToMove;
@@ -32,29 +26,14 @@ public class PlayerMoveIntent
     public string description;
 }
 
-/// <summary>
-/// 用来管理整个世界的状态，例如地点，和转发各个地点发生的事情到其他地点
-/// </summary>
 public class KPWorldMapManager
 {
-    /// <summary>
-    /// 世界位置字典
-    /// </summary>
     public Dictionary<string, WorldLocation> worldLocations = new Dictionary<string, WorldLocation>();
     
-    /// <summary>
-    /// 当前所在的位置
-    /// </summary>
     public SpaceCardModel currentSpace;
     
-    /// <summary>
-    /// 玩家当前的故事管理器
-    /// </summary>
     public KPSpaceStoryManager currentStoryManager;
 
-    /// <summary>
-    /// 初始化世界地图
-    /// </summary>
     public void InitWorldMap()
     {
         var spaces = GetAllSpaces();
@@ -73,9 +52,6 @@ public class KPWorldMapManager
         }
     }
 
-    /// <summary>
-    /// 对地点的描述，获取要去的地方的文字描述，再根据现有地图判断是否添加地点还是已经有地图了。向GPT询问
-    /// </summary>
     public async Task<SpaceCardModel> TryFindWorldPlace(string description)
     {
         var spaces = GetAllSpaces() ?? new List<SpaceCardModel>();
@@ -89,8 +65,9 @@ public class KPWorldMapManager
             }
         }
         
-        return await GenerateNewPlace(description);
+        return null;
     }
+
     public SpaceCardModel FindOrCreateSpace(string name, string description)
     {
         if (worldLocations.ContainsKey(name))
@@ -111,40 +88,6 @@ public class KPWorldMapManager
         return null;
     }
 
-    /// <summary>
-
-    /// <summary>
-    /// 根据描述生成新地点
-    /// </summary>
-    private async Task<SpaceCardModel> GenerateNewPlace(string description)
-    {
-        var prompt = $@"你是一个克苏鲁神话跑团的空间生成器。
-根据以下描述生成一个新的地点：
-
-{description}
-
-请生成一个JSON格式的地点信息：
-{{
-    ""title"": ""地点名称"",
-    ""description"": ""地点描述"",
-    ""region"": ""所属区域""
-}}";
-
-        var messages = new List<QwenChatMessage>
-        {
-            new QwenChatMessage { role = "system", content = prompt },
-            new QwenChatMessage { role = "user", content = description }
-        };
-
-        var result = await GameFrameWork.Instance.GptSystem.ChatToGPT<dynamic>(messages);
-        
-        Debug.Log($"Generated new place: {result}");
-        return null;
-    }
-
-    /// <summary>
-    /// 检测玩家的移动意图
-    /// </summary>
     public async Task<PlayerMoveIntent> DetectMoveIntent(string playerInput)
     {
         var moveKeywords = new[] { "去", "到", "走向", "前往", "离开", "去往", "goto", "go to", "leave" };
@@ -189,9 +132,6 @@ JSON格式：
         return result ?? new PlayerMoveIntent { wantsToMove = false };
     }
 
-    /// <summary>
-    /// 切换到新位置
-    /// </summary>
     public async Task<KPSpaceStoryManager> SwitchToLocation(string locationName, string cocText)
     {
         SpaceCardModel targetSpace = null;
@@ -207,12 +147,33 @@ JSON格式：
 
         if (targetSpace == null)
         {
-            Debug.LogWarning($"无法找到或创建位置: {locationName}");
-            return null;
+            Debug.Log($"未找到地点，正在生成新地点: {locationName}");
+            var newPlaceDescription = await GeneratePlaceDescription(locationName, cocText);
+            
+            var newLocation = new WorldLocation
+            {
+                name = locationName,
+                description = newPlaceDescription,
+                spaceModel = null
+            };
+            worldLocations[locationName] = newLocation;
+            currentSpace = null;
+            
+            var newStoryManager1 = new KPSpaceStoryManager
+            
+            var newStoryManager1 = new KPSpaceStoryManager
+            {
+                context = newPlaceDescription,
+                worldMapManager = this
+            };
+            currentStoryManager = newStoryManager1;
+            // newStoryManager1.StartSpaceStory();
+            
+            return newStoryManager1;
         }
 
         currentSpace = targetSpace;
-        
+
         var newStoryManager = new KPSpaceStoryManager
         {
             context = cocText,
@@ -220,36 +181,46 @@ JSON格式：
         };
 
         currentStoryManager = newStoryManager;
-        newStoryManager.StartSpaceStory();
-
-        var spaceName = targetSpace.space.title;
-        if (GameFrameWork.Instance.ChatPanel != null)
-        {
-            GameFrameWork.Instance.ChatPanel.SetPlace(spaceName);
-        }
+        // newStoryManager.StartSpaceStory();
 
         return newStoryManager;
     }
 
-    /// <summary>
-    /// 前往指定的位置，通过向GPTSystem询问
-    /// </summary>
+    private async Task<string> GeneratePlaceDescription(string locationName, string cocText)
+    {
+        var prompt = $@"你是一个克苏鲁神话跑团的故事生成器。
+玩家正在前往一个新地点: {locationName}
+
+【模组背景】
+{cocText}
+
+请生成这个新地点的详细描述，包含：
+1. 地点名称
+2. 地点环境描述
+3. 玩家可能在这里发现的重要线索或信息
+
+请用流畅的叙事方式描述，不要用JSON格式。";
+
+        var messages = new List<QwenChatMessage>
+        {
+            new QwenChatMessage { role = "system", content = prompt },
+            new QwenChatMessage { role = "user", content = $"描述地点: {locationName}" }
+        };
+
+        var result = await GameFrameWork.Instance.GptSystem.ChatToGPT(messages);
+        return result ?? $"玩家来到了{locationName}。";
+    }
+
     public async Task<GptRet<bool>> EnterSpaceCardGPT(string name, SpaceCardModel space)
     {
         return new GptRet<bool>();
     }
     
-    /// <summary>
-    /// 离开地区，通过向GPT询问
-    /// </summary>
     public async Task<GptRet<bool>> LeaveSpaceCardGPT(string name)
     {
         return null;
     }
     
-    /// <summary>
-    /// 获取所有的场景信息
-    /// </summary>
     public List<SpaceCardModel> GetAllSpaces()
     {
         return GameFrameWork.Instance.WorldMapSystem.Spaces;
@@ -260,9 +231,6 @@ JSON格式：
         return GameFrameWork.Instance.FindNpcById(name);
     }
     
-    /// <summary>
-    /// 根据对npc的描述来寻找角色信息
-    /// </summary>
     public NpcCardModel FindNpcByDescription(string description)
     {
         return null;
