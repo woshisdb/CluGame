@@ -162,11 +162,9 @@ JSON格式：
             worldLocations[locationName] = newLocation;
             currentSpace = newSpaceCardModel;
             
-            var newStoryManager1 = new KPSpaceStoryManager
-            {
-                context = newPlaceDescription,
-                worldMapManager = this
-            };
+            // 使用 Init 方法初始化
+            var newStoryManager1 = new KPSpaceStoryManager();
+            await newStoryManager1.InitAndGenerateInfo(newPlaceDescription, cocText, this);
             currentStoryManager = newStoryManager1;
             // newStoryManager1.StartSpaceStory();
             
@@ -175,11 +173,9 @@ JSON格式：
 
         currentSpace = targetSpace;
 
-        var newStoryManager = new KPSpaceStoryManager
-        {
-            context = cocText,
-            worldMapManager = this
-        };
+        // 使用 Init 方法初始化
+        var newStoryManager = new KPSpaceStoryManager();
+        newStoryManager.Init(cocText, cocText, this);
 
         currentStoryManager = newStoryManager;
         // newStoryManager.StartSpaceStory();

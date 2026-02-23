@@ -8,8 +8,8 @@ using UnityEngine;
 
 public class KPSpaceStoryManager
 {
-    public string context;
-    public List<string> availableNpcs=new List<string>();
+    public string context { get; private set; }
+    public List<string> availableNpcs { get; private set; } = new List<string>();
     public Dictionary<string, NpcCardModel> sceneNpcs = new Dictionary<string, NpcCardModel>();
     public Dictionary<string, GptChatSession> npcChatSessions = new Dictionary<string, GptChatSession>();
     public GptChatSession narratorSession;
@@ -22,17 +22,49 @@ public class KPSpaceStoryManager
     /// <summary>
     /// 这里的重要信息有哪些
     /// </summary>
-    public string importantThings;
+    public string importantThings { get; private set; }
 
     /// <summary>
     /// 已经发现的信息
     /// </summary>
-    public string hasFindThings;
+    public string hasFindThings { get; private set; }
 
     /// <summary>
     /// 模组背景文本（用于生成NPC和重要信息）
     /// </summary>
-    public string cocText;
+    public string cocText { get; private set; }
+
+    /// <summary>
+    /// 初始化 KPSpaceStoryManager
+    /// </summary>
+    /// <param name="context">场景描述</param>
+    /// <param name="cocText">模组背景文本</param>
+    /// <param name="worldMapManager">世界地图管理器</param>
+    public void Init(string context, string cocText = null, KPWorldMapManager worldMapManager = null)
+    {
+        this.context = context;
+        this.cocText = cocText;
+        this.worldMapManager = worldMapManager;
+        this.availableNpcs = new List<string>();
+        this.importantThings = string.Empty;
+        this.hasFindThings = string.Empty;
+        this.sceneNpcs = new Dictionary<string, NpcCardModel>();
+        this.npcChatSessions = new Dictionary<string, GptChatSession>();
+        this.narratorSession = null;
+        
+        Debug.Log($"KPSpaceStoryManager 初始化完成: {context?.Substring(0, Math.Min(20, context.Length))}...");
+    }
+
+    /// <summary>
+    /// 初始化并生成场景信息（异步）
+    /// </summary>
+    public async Task InitAndGenerateInfo(string context, string cocText = null, KPWorldMapManager worldMapManager = null)
+    {
+        Init(context, cocText, worldMapManager);
+        
+        // 生成场景信息
+        await GenerateSceneInfo();
+    }
 
     [Button("开始故事")]
     public async Task StartSpaceStory()

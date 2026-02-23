@@ -63,14 +63,13 @@ public class KPWorldStoryManager
             GameFrameWork.Instance.ChatPanel.SetPlace(firstSceneName);
         }
 
+        // 使用 Init 方法初始化
         var spaceManager = new KPSpaceStoryManager();
-        // this.KPSpaceStoryManager = spaceManager;
+        await spaceManager.InitAndGenerateInfo(firstSceneContext, cocText, worldMapManager);
+        // spaceManager.availableNpcs = availableNpcs;
+        // spaceManager.importantThings = importantThings;
+        // spaceManager.hasFindThings = hasFindThings;
         SetNowSpaceManager(spaceManager);
-        spaceManager.context = firstSceneContext;
-        spaceManager.availableNpcs = availableNpcs;
-        spaceManager.importantThings = importantThings;
-        spaceManager.hasFindThings = hasFindThings;
-        spaceManager.worldMapManager = worldMapManager;
         spaceManager.StartSpaceStory();
     }
 
