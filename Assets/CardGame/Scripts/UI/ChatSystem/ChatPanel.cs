@@ -26,12 +26,24 @@ public class ChatPanel : MonoBehaviour
     public Button submitBtn;
     public TMP_Dropdown Dropdown;
     public TextMeshProUGUI nowPlace;
+    
+    public string currentPlaceName { get; private set; }
+
     public void Init(ChatComponent speaker, ChatComponent npcId, IChatPanelListener listener)
     {
         this.listener = listener;
         this.currentNpcId = npcId;
         this.speaker = speaker;
         gameObject.SetActive(true);
+    }
+
+    public void SetPlace(string placeName)
+    {
+        currentPlaceName = placeName;
+        if (nowPlace != null)
+        {
+            nowPlace.text = placeName;
+        }
     }
 
     public void UpdateDropdownOptions(List<string> options)
