@@ -328,25 +328,65 @@ public class KPSpaceStoryManager
 
     private void InitNpcSession(string npcName, NpcCardModel npc)
     {
-        var prompt = "你是一个【NPC 对话结果的 JSON 转译工具】。\n" +
-                     "你的职责是：根据提供的 NPC 设定，生成该 NPC 在当前情境下可能给出的【一句回应】，并用 JSON 输出。\n" +
+        var npcTitle = npc.GetTitle() ?? npc.npcId ?? "未知角色";
+        var npcDescription = npc.GetDescription() ?? "";
+        
+        var npcInfo = $"角色名称: {npcTitle}\n" +
+                      $"角色ID: {npc.npcId}\n" +
+                      $"角色描述: {npcDescription}\n";
+        
+        if (npc.NpcPhyInfo != null)
+        {
+            npcInfo += $"性别: {npc.NpcPhyInfo.sex}\n" +
+                       $"年龄: {npc.NpcPhyInfo.age}\n";
+        }
+        
+        if (npc.NpcThink != null && npc.NpcThink.npcThinks != null)
+        {
+            var thinkInfo = npc.NpcThink.npcThinks.GetType().GetProperties()
+                .Select(p => $"{p.Name}: {p.GetValue(npc.NpcThink.npcThinks)}")
+                .ToList();
+            if (thinkInfo.Any())
+            {
+                npcInfo += $"性格特征: {string.Join(", ", thinkInfo)}\n";
+            }
+        }
+        
+        // 获取NPC当前任务
+        var nowTaskComponent = npc.GetComponent<NowTaskComponent>();
+        if (nowTaskComponent != null && nowTaskComponent.SupplyTask != null)
+        {
+            var taskType = nowTaskComponent.GetTaskType();
+            npcInfo += $"当前任务: {taskType}\n";
+        }
+        
+        // 构建完整提示
+        var prompt = $"你是一个《克苏鲁的呼唤》跑团的【NPC对话生成器】。\n" +
+                     "你的职责是：根据提供的 NPC 设定，生成该 NPC 在当前情境下的一句角色化回应，并用 JSON 输出。\n" +
                      "\n" +
-                     "NPC ID: " + npcName + "\n" +
-                     "NPC 描述: " + (npc.npcId ?? "未知") + "\n" +
-                     "场景描述: " + context + "\n" +
-                     "\n" +
-                     "⚠️ 重要约束：\n" +
-                     "- 你不是 NPC 本人\n" +
-                     "- 你不进行角色扮演\n" +
-                     "- 你不沉浸、不叙事、不扩写背景\n" +
-                     "- 你只负责模拟 NPC 会说什么，并将其格式化为 JSON\n" +
-                     "- 除 JSON 外，不得输出任何内容\n" +
-                     "\n" +
-                     "【输出格式要求】\n" +
-                     "你必须严格按以下 JSON 输出：\n" +
-                     "{\n" +
-                     "  \"message\": \"NPC 的一句回应内容\"\n" +
-                     "}";
+                     npcInfo +
+                     "场景描述: " + context + "\n";
+        
+        // 添加CoC文本背景
+        if (!string.IsNullOrEmpty(cocText))
+        {
+            prompt += "\n【CoC 模组背景】\n" + cocText + "\n";
+        }
+        
+        prompt += "\n" +
+                  "⚠️ 重要约束：\n" +
+                  "- 你必须扮演这个 NPC，根据他的角色设定来回应\n" +
+                  "- 保持角色的性格特点和行为（如年龄、性别、性格特征）\n" +
+                  "- 如果NPC有当前任务，回应应该围绕任务展开\n" +
+                  "- 回应要符合CoC模组的剧情背景和当前场景\n" +
+                  "- 你只负责生成 NPC 的回应，并将其格式化为 JSON\n" +
+                  "- 除 JSON 外，不得输出任何内容\n" +
+                  "\n" +
+                  "【输出格式要求】\n" +
+                  "你必须严格按以下 JSON 输出：\n" +
+                  "{\n" +
+                  "  \"message\": \"NPC 的一句角色化回应内容\"\n" +
+                  "}";
 
         npcChatSessions[npcName] = new GptChatSession(prompt);
     }
