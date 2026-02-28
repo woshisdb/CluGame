@@ -32,12 +32,27 @@ public class KPWorldMapManager
     
     public SpaceCardModel currentSpace;
     
-    public KPSpaceStoryManager currentStoryManager;
+    /// <summary>
+    /// 当前场景的故事管理器（从 SpaceCardModel 获取）
+    /// </summary>
+    public KPSpaceStoryManager currentStoryManager
+    {
+        get
+        {
+            return currentSpace?.spaceStoryManager;
+        }
+    }
     
     /// <summary>
-    /// 当前场景的空间管理器（管理物品和状态）
+    /// 当前场景的空间管理器（从 SpaceCardModel 获取）
     /// </summary>
-    public KPPlaceSpaceManager currentPlaceSpaceManager;
+    public KPPlaceSpaceManager currentPlaceSpaceManager
+    {
+        get
+        {
+            return currentSpace?.placeSpaceManager;
+        }
+    }
 
     public void InitWorldMap()
     {
@@ -149,13 +164,14 @@ JSON格式：
         {
             targetSpace = await TryFindWorldPlace(locationName);
         }
-
+ 
         if (targetSpace == null)
         {
             Debug.Log($"未找到地点，正在生成新地点: {locationName}");
             var newPlaceDescription = await GeneratePlaceDescription(locationName, cocText);
             
             // 使用 WorldMapSystem.AddSpaceCard 创建新的 SpaceCardModel
+            // SpaceCardModel 内部会自动创建 KPPlaceSpaceManager
             var newSpaceCardModel = GameFrameWork.Instance.WorldMapSystem.AddSpaceCard(locationName, newPlaceDescription);
             
             var newLocation = new WorldLocation
@@ -167,31 +183,21 @@ JSON格式：
             worldLocations[locationName] = newLocation;
             currentSpace = newSpaceCardModel;
             
-            // 创建 KPPlaceSpaceManager 管理场景物品和状态
-            currentPlaceSpaceManager = new KPPlaceSpaceManager();
-            currentPlaceSpaceManager.Init(locationName, newPlaceDescription);
+            // 初始化 SpaceCardModel 中的 KPSpaceStoryManager
+            newSpaceCardModel.InitSpaceStoryManager(GameFrameWork.Instance.KP.KpWorldStoryManager, cocText);
             
-            // 使用 Init 方法初始化 KPSpaceStoryManager
-            var newStoryManager1 = new KPSpaceStoryManager();
-            await newStoryManager1.InitAndGenerateInfo(newPlaceDescription, cocText, this);
-            currentStoryManager = newStoryManager1;
-            
-            return newStoryManager1;
+            return newSpaceCardModel.spaceStoryManager;
+        }
+ 
+        currentSpace = targetSpace;
+        
+        // 如果 SpaceCardModel 还没有初始化 storyManager，则初始化
+        if (currentSpace.spaceStoryManager == null)
+        {
+            currentSpace.InitSpaceStoryManager(GameFrameWork.Instance.KP.KpWorldStoryManager, cocText);
         }
 
-        currentSpace = targetSpace;
-
-        // 创建 KPPlaceSpaceManager 管理场景物品和状态
-        currentPlaceSpaceManager = new KPPlaceSpaceManager();
-        currentPlaceSpaceManager.Init(locationName, targetSpace.space.descirption);
-
-        // 使用 Init 方法初始化 KPSpaceStoryManager
-        var newStoryManager = new KPSpaceStoryManager();
-        newStoryManager.Init(targetSpace.space.descirption, cocText, this);
-
-        currentStoryManager = newStoryManager;
-
-        return newStoryManager;
+        return currentSpace.spaceStoryManager;
     }
 
     private async Task<string> GeneratePlaceDescription(string locationName, string cocText)

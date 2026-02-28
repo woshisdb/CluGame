@@ -227,7 +227,17 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
     /// 一系列的npc;
     /// </summary>
     public List<string> npcs;
-
+    
+    /// <summary>
+    /// 场景空间管理器 - 管理场景中物品和状态
+    /// </summary>
+    public KPPlaceSpaceManager placeSpaceManager;
+    
+    /// <summary>
+    /// 场景故事管理器 - 管理故事、对话、叙事
+    /// </summary>
+    public KPSpaceStoryManager spaceStoryManager;
+ 
     public SpaceCardData SpaceCardData
     {
         get
@@ -235,7 +245,7 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
             return (SpaceCardData)cardData;
         }
     }
-
+ 
     public SpaceCardConfig space
     {
         get
@@ -243,13 +253,31 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
             return cfg.Value as SpaceCardConfig;
         }
     }
-
+ 
     public SpaceCardModel(CardData cardData,SpaceCardConfig space) : base(cardData,space)
     {
         npcs = new List<string>();
         
+        // 初始化场景管理器
+        placeSpaceManager = new KPPlaceSpaceManager();
+        placeSpaceManager.Init(space.title, space.descirption);
+        
+        // KPSpaceStoryManager 在 StartStory 时初始化
+        spaceStoryManager = null;
+         
         // SetDataByKey("Jobs",new List<JobCardModel>());
         // 模型初始化逻辑
+    }
+    
+    /// <summary>
+    /// 初始化场景故事管理器
+    /// </summary>
+    /// <param name="cocStoryManager">世界故事管理器</param>
+    /// <param name="cocText">CoC模组文本</param>
+    public void InitSpaceStoryManager(KPWorldStoryManager cocStoryManager, string cocText)
+    {
+        spaceStoryManager = new KPSpaceStoryManager();
+        spaceStoryManager.Init(space.descirption, cocText, cocStoryManager.worldMapManager);
     }
     public override List<UIItemBinder> GetUI()
     {

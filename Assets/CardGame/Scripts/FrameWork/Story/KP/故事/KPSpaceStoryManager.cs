@@ -50,7 +50,7 @@ public class KPSpaceStoryManager
         this.context = context;
         this.cocText = cocText;
         this.worldMapManager = worldMapManager;
-        this.placeSpaceManager = worldMapManager?.currentPlaceSpaceManager;
+        this.placeSpaceManager = worldMapManager?.currentSpace?.placeSpaceManager;
         this.availableNpcs = new List<string>();
         this.importantThings = string.Empty;
         this.hasFindThings = string.Empty;
@@ -60,7 +60,7 @@ public class KPSpaceStoryManager
         
         Debug.Log($"KPSpaceStoryManager 初始化完成: {context?.Substring(0, Math.Min(20, context.Length))}...");
     }
-
+ 
     /// <summary>
     /// 初始化并生成场景信息（异步）
     /// </summary>
@@ -101,6 +101,12 @@ public class KPSpaceStoryManager
         {
             Debug.LogError("ChatComponent not found on player!");
             return;
+        }
+
+        // 调用当前场景的 Enter
+        if (worldMapManager != null && worldMapManager.currentSpace != null)
+        {
+            worldMapManager.currentSpace.Enter(player);
         }
 
         ParseSceneNpcs();
@@ -474,10 +480,26 @@ public class KPSpaceStoryManager
             {
                 input.panel.AddMessage($"【系统】正在前往｜{moveIntent.targetLocation}...");
                 
-                var newStoryManager = await worldMapManager.SwitchToLocation(
-                    moveIntent.targetLocation, 
-                    context
-                );
+                // 获取当前玩家
+                var player = GameFrameWork.Instance.playerManager.nowPlayer;
+                
+        // 调用旧场景的 Exit
+        if (worldMapManager.currentSpace != null && player != null)
+        {
+            worldMapManager.currentSpace.Exit(player);
+        }
+        
+        var newStoryManager = await worldMapManager.SwitchToLocation(
+            moveIntent.targetLocation, 
+            context
+        );
+        
+        // 调用新场景的 Enter
+        if (worldMapManager.currentSpace != null && player != null)
+        {
+            worldMapManager.currentSpace.Enter(player);
+        }
+                
                 GameFrameWork.Instance.KP.KpWorldStoryManager.SetNowSpaceManager(newStoryManager);
                 await newStoryManager.StartSpaceStory();
                 if (newStoryManager != null)

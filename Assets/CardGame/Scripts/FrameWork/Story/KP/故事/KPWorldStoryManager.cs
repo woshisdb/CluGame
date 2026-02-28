@@ -63,18 +63,13 @@ public class KPWorldStoryManager
             GameFrameWork.Instance.ChatPanel.SetPlace(firstSceneName);
         }
 
-        // 创建 KPPlaceSpaceManager 管理第一个场景的物品和状态
-        worldMapManager.currentPlaceSpaceManager = new KPPlaceSpaceManager();
-        worldMapManager.currentPlaceSpaceManager.Init(firstSceneName, firstSceneContext);
-
-        // 使用 Init 方法初始化
-        var spaceManager = new KPSpaceStoryManager();
-        await spaceManager.InitAndGenerateInfo(firstSceneContext, cocText, worldMapManager);
-        // spaceManager.availableNpcs = availableNpcs;
-        // spaceManager.importantThings = importantThings;
-        // spaceManager.hasFindThings = hasFindThings;
-        SetNowSpaceManager(spaceManager);
-        spaceManager.StartSpaceStory();
+        // 使用 SpaceCardModel 中的管理器
+        // KPPlaceSpaceManager 在 SpaceCardModel 构造时已创建
+        // 初始化 KPSpaceStoryManager
+        firstSpace.InitSpaceStoryManager(this, cocText);
+        
+        SetNowSpaceManager(firstSpace.spaceStoryManager);
+        firstSpace.spaceStoryManager.StartSpaceStory();
     }
 
     public void SetNowSpaceManager(KPSpaceStoryManager KPSpaceStoryManager)
