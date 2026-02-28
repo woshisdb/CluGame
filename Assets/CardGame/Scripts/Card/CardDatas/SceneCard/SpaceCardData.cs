@@ -229,11 +229,6 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
     public List<string> npcs;
     
     /// <summary>
-    /// 场景空间管理器 - 管理场景中物品和状态
-    /// </summary>
-    public KPPlaceSpaceManager placeSpaceManager;
-    
-    /// <summary>
     /// 场景故事管理器 - 管理故事、对话、叙事
     /// </summary>
     public KPSpaceStoryManager spaceStoryManager;
@@ -257,11 +252,14 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
     public SpaceCardModel(CardData cardData,SpaceCardConfig space) : base(cardData,space)
     {
         npcs = new List<string>();
-        
-        // 初始化场景管理器
-        placeSpaceManager = new KPPlaceSpaceManager();
-        placeSpaceManager.Init(space.title, space.descirption);
-        
+         
+        // 确保有 ContainerComponent
+        if (!IsSatComponent<ContainerComponent>())
+        {
+            var containerCreator = new ContainerComponentCreator();
+            Components.Add(containerCreator.ComponentName(), containerCreator.Create(this));
+        }
+         
         // KPSpaceStoryManager 在 StartStory 时初始化
         spaceStoryManager = null;
          
@@ -278,6 +276,105 @@ public class SpaceCardModel : CardModel,IBelong,ISearchNode,AIConclusion
     {
         spaceStoryManager = new KPSpaceStoryManager();
         spaceStoryManager.Init(space.descirption, cocText, cocStoryManager.worldMapManager);
+    }
+    
+    /// <summary>
+    /// 获取场景中的 ContainerComponent
+    /// </summary>
+    public ContainerComponent GetContainer()
+    {
+        return GetComponent<ContainerComponent>();
+    }
+    
+    /// <summary>
+    /// 添加物品到场景
+    /// </summary>
+    /// <param name="obj">物品</param>
+    /// <param name="location">位置描述</param>
+    public void AddObject(ObjectCardModel obj, string location = null)
+    {
+        var container = GetContainer();
+        if (container != null)
+        {
+            container.TryAdd(obj);
+            
+            // 如果提供了位置描述，设置到 SceneItemStateComponent
+            if (!string.IsNullOrEmpty(location))
+            {
+                var stateComp = obj.GetComponent<SceneItemStateComponent>();
+                if (stateComp != null)
+                {
+                    stateComp.location = location;
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 移除物品
+    /// </summary>
+    public void RemoveObject(ObjectCardModel obj)
+    {
+        var container = GetContainer();
+        if (container != null)
+        {
+            container.TryRemove(obj);
+        }
+    }
+    
+    /// <summary>
+    /// 获取可见物品
+    /// </summary>
+    public List<ObjectCardModel> GetVisibleObjects()
+    {
+        var container = GetContainer();
+        if (container == null) return new List<ObjectCardModel>();
+        
+        var visibleObjects = new List<ObjectCardModel>();
+        foreach (var card in container.Contents)
+        {
+            if (card is ObjectCardModel obj)
+            {
+                var stateComp = obj.GetComponent<SceneItemStateComponent>();
+                if (stateComp != null && stateComp.isVisible)
+                {
+                    visibleObjects.Add(obj);
+                }
+            }
+        }
+        return visibleObjects;
+    }
+    
+    /// <summary>
+    /// 生成场景描述（供GPT使用）
+    /// </summary>
+    public string GenerateSceneDescription()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"【场景名称】{space.title}");
+        sb.AppendLine($"【场景描述】{space.descirption}");
+        
+        var visibleObjects = GetVisibleObjects();
+        if (visibleObjects.Count > 0)
+        {
+            sb.AppendLine("\n【场景中的物品】");
+            foreach (var obj in visibleObjects)
+            {
+                sb.AppendLine($"- {obj.GetTitle()}: {obj.GetDescription()}");
+                
+                var stateComp = obj.GetComponent<SceneItemStateComponent>();
+                if (stateComp != null)
+                {
+                    if (!string.IsNullOrEmpty(stateComp.location))
+                    {
+                        sb.AppendLine($"  位置: {stateComp.location}");
+                    }
+                    sb.AppendLine($"  状态: {stateComp.state}");
+                }
+            }
+        }
+        
+        return sb.ToString();
     }
     public override List<UIItemBinder> GetUI()
     {

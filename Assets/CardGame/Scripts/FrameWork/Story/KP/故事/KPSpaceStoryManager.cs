@@ -18,11 +18,6 @@ public class KPSpaceStoryManager
     /// 世界地图管理器引用
     /// </summary>
     public KPWorldMapManager worldMapManager;
-    
-    /// <summary>
-    /// 场景空间管理器引用（管理物品和状态）
-    /// </summary>
-    public KPPlaceSpaceManager placeSpaceManager;
  
     /// <summary>
     /// 这里的重要信息有哪些
@@ -50,7 +45,6 @@ public class KPSpaceStoryManager
         this.context = context;
         this.cocText = cocText;
         this.worldMapManager = worldMapManager;
-        this.placeSpaceManager = worldMapManager?.currentSpace?.placeSpaceManager;
         this.availableNpcs = new List<string>();
         this.importantThings = string.Empty;
         this.hasFindThings = string.Empty;
@@ -331,9 +325,9 @@ public class KPSpaceStoryManager
                      context + "\n";
         
         // 添加场景状态（物品、环境等）
-        if (placeSpaceManager != null)
+        if (worldMapManager?.currentSpace != null)
         {
-            prompt += "\n" + placeSpaceManager.GenerateSceneStateDescription() + "\n";
+            prompt += "\n" + worldMapManager.currentSpace.GenerateSceneDescription() + "\n";
         }
         
         prompt += "【输出格式要求】\n" +
@@ -379,6 +373,8 @@ public class KPSpaceStoryManager
             npcInfo += $"当前任务: {taskType}\n";
         }
         
+       
+        
         // 构建完整提示
         var prompt = $"你是一个《克苏鲁的呼唤》跑团的【NPC对话生成器】。\n" +
                      "你的职责是：根据提供的 NPC 设定，生成该 NPC 在当前情境下的一句角色化回应，并用 JSON 输出。\n" +
@@ -387,9 +383,9 @@ public class KPSpaceStoryManager
                      "场景描述: " + context + "\n";
         
         // 添加场景状态（物品、环境等）
-        if (placeSpaceManager != null)
+        if (worldMapManager?.currentSpace != null)
         {
-            prompt += "\n" + placeSpaceManager.GenerateSceneStateDescription() + "\n";
+            prompt += "\n" + worldMapManager.currentSpace.GenerateSceneDescription() + "\n";
         }
         
         // 添加CoC文本背景
@@ -406,7 +402,7 @@ public class KPSpaceStoryManager
                   "- 回应要符合CoC模组的剧情背景和当前场景\n" +
                   "- 回应要考虑场景中的物品和环境状态\n" +
                   "- 你只负责生成 NPC 的回应，并将其格式化为 JSON\n" +
-                  "- 除 JSON 外，不得输出任何内容\n" +
+                  "- 除以 JSON 外，不得输出任何内容\n" +
                   "\n" +
                   "【输出格式要求】\n" +
                   "你必须严格按以下 JSON 输出：\n" +

@@ -15,7 +15,7 @@ public class ContainerComponent:IComponent
     {
         this.CardModel = card;
         this.AllSize = creator.AllSize;
-        Contents = new();
+        Contents = new List<CardModel>();
     }
 
     public bool TryAdd(CardModel content)

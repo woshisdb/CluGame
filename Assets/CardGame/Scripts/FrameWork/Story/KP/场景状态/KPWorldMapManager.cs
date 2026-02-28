@@ -42,17 +42,6 @@ public class KPWorldMapManager
             return currentSpace?.spaceStoryManager;
         }
     }
-    
-    /// <summary>
-    /// 当前场景的空间管理器（从 SpaceCardModel 获取）
-    /// </summary>
-    public KPPlaceSpaceManager currentPlaceSpaceManager
-    {
-        get
-        {
-            return currentSpace?.placeSpaceManager;
-        }
-    }
 
     public void InitWorldMap()
     {
