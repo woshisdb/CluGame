@@ -18,7 +18,12 @@ public class KPSpaceStoryManager
     /// 世界地图管理器引用
     /// </summary>
     public KPWorldMapManager worldMapManager;
-
+    
+    /// <summary>
+    /// 场景空间管理器引用（管理物品和状态）
+    /// </summary>
+    public KPPlaceSpaceManager placeSpaceManager;
+ 
     /// <summary>
     /// 这里的重要信息有哪些
     /// </summary>
@@ -45,6 +50,7 @@ public class KPSpaceStoryManager
         this.context = context;
         this.cocText = cocText;
         this.worldMapManager = worldMapManager;
+        this.placeSpaceManager = worldMapManager?.currentPlaceSpaceManager;
         this.availableNpcs = new List<string>();
         this.importantThings = string.Empty;
         this.hasFindThings = string.Empty;
@@ -316,12 +322,19 @@ public class KPSpaceStoryManager
                      "- 使用第三人称、描述性语言\n" +
                      "\n" +
                      "场景背景" +
-                     context + "\n" +
-                     "【输出格式要求】\n" +
-                     "你必须严格按以下 JSON 输出：\n" +
-                     "{\n" +
-                     "  \"message\": \"你的画外音描述内容\"\n" +
-                     "}";
+                     context + "\n";
+        
+        // 添加场景状态（物品、环境等）
+        if (placeSpaceManager != null)
+        {
+            prompt += "\n" + placeSpaceManager.GenerateSceneStateDescription() + "\n";
+        }
+        
+        prompt += "【输出格式要求】\n" +
+                  "你必须严格按以下 JSON 输出：\n" +
+                  "{\n" +
+                  "  \"message\": \"你的画外音描述内容\"\n" +
+                  "}";
 
         narratorSession = new GptChatSession(prompt);
     }
@@ -367,6 +380,12 @@ public class KPSpaceStoryManager
                      npcInfo +
                      "场景描述: " + context + "\n";
         
+        // 添加场景状态（物品、环境等）
+        if (placeSpaceManager != null)
+        {
+            prompt += "\n" + placeSpaceManager.GenerateSceneStateDescription() + "\n";
+        }
+        
         // 添加CoC文本背景
         if (!string.IsNullOrEmpty(cocText))
         {
@@ -379,6 +398,7 @@ public class KPSpaceStoryManager
                   "- 保持角色的性格特点和行为（如年龄、性别、性格特征）\n" +
                   "- 如果NPC有当前任务，回应应该围绕任务展开\n" +
                   "- 回应要符合CoC模组的剧情背景和当前场景\n" +
+                  "- 回应要考虑场景中的物品和环境状态\n" +
                   "- 你只负责生成 NPC 的回应，并将其格式化为 JSON\n" +
                   "- 除 JSON 外，不得输出任何内容\n" +
                   "\n" +

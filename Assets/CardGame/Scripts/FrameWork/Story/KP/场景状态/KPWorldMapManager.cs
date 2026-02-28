@@ -33,6 +33,11 @@ public class KPWorldMapManager
     public SpaceCardModel currentSpace;
     
     public KPSpaceStoryManager currentStoryManager;
+    
+    /// <summary>
+    /// 当前场景的空间管理器（管理物品和状态）
+    /// </summary>
+    public KPPlaceSpaceManager currentPlaceSpaceManager;
 
     public void InitWorldMap()
     {
@@ -162,23 +167,29 @@ JSON格式：
             worldLocations[locationName] = newLocation;
             currentSpace = newSpaceCardModel;
             
-            // 使用 Init 方法初始化
+            // 创建 KPPlaceSpaceManager 管理场景物品和状态
+            currentPlaceSpaceManager = new KPPlaceSpaceManager();
+            currentPlaceSpaceManager.Init(locationName, newPlaceDescription);
+            
+            // 使用 Init 方法初始化 KPSpaceStoryManager
             var newStoryManager1 = new KPSpaceStoryManager();
             await newStoryManager1.InitAndGenerateInfo(newPlaceDescription, cocText, this);
             currentStoryManager = newStoryManager1;
-            // newStoryManager1.StartSpaceStory();
             
             return newStoryManager1;
         }
 
         currentSpace = targetSpace;
 
-        // 使用 Init 方法初始化
+        // 创建 KPPlaceSpaceManager 管理场景物品和状态
+        currentPlaceSpaceManager = new KPPlaceSpaceManager();
+        currentPlaceSpaceManager.Init(locationName, targetSpace.space.descirption);
+
+        // 使用 Init 方法初始化 KPSpaceStoryManager
         var newStoryManager = new KPSpaceStoryManager();
-        newStoryManager.Init(cocText, cocText, this);
+        newStoryManager.Init(targetSpace.space.descirption, cocText, this);
 
         currentStoryManager = newStoryManager;
-        // newStoryManager.StartSpaceStory();
 
         return newStoryManager;
     }

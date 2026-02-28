@@ -63,6 +63,10 @@ public class KPWorldStoryManager
             GameFrameWork.Instance.ChatPanel.SetPlace(firstSceneName);
         }
 
+        // 创建 KPPlaceSpaceManager 管理第一个场景的物品和状态
+        worldMapManager.currentPlaceSpaceManager = new KPPlaceSpaceManager();
+        worldMapManager.currentPlaceSpaceManager.Init(firstSceneName, firstSceneContext);
+
         // 使用 Init 方法初始化
         var spaceManager = new KPSpaceStoryManager();
         await spaceManager.InitAndGenerateInfo(firstSceneContext, cocText, worldMapManager);
