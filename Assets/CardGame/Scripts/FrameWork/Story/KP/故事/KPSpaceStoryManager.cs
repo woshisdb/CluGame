@@ -77,9 +77,9 @@ public class KPSpaceStoryManager
             return;
         }
 
-        if (GameFrameWork.Instance.KP != null && GameFrameWork.Instance.KP.kpWorldManager != null)
+        if (GameFrameWork.Instance.KP != null && GameFrameWork.Instance.KP.kpWorldManagerManager != null)
         {
-            worldMapManager = GameFrameWork.Instance.KP.kpWorldManager;
+            worldMapManager = GameFrameWork.Instance.KP.kpWorldManagerManager;
             worldMapManager.InitWorldMap();
         }
 

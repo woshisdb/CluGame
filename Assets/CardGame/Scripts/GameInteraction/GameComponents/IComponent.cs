@@ -40,6 +40,8 @@ public enum ComponentType
     KinshipComponent = 37,
     RelationComponent = 38,
     ChatComponent = 40,
+    SceneItemStateComponent = 41,
+    InteractableComponent = 42,
 }
 
 public class BaseComponent:IComponent

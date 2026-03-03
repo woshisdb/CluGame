@@ -38,7 +38,7 @@ public class KPWorldStoryManager
         
         if (GameFrameWork.Instance.KP != null)
         {
-            GameFrameWork.Instance.KP.kpWorldManager = worldMapManager;
+            GameFrameWork.Instance.KP.kpWorldManagerManager = worldMapManager;
         }
         
         await GenerateTasks(cocText);
@@ -63,8 +63,7 @@ public class KPWorldStoryManager
             GameFrameWork.Instance.ChatPanel.SetPlace(firstSceneName);
         }
 
-        // 使用 SpaceCardModel 中的管理器
-        // KPPlaceSpaceManager 在 SpaceCardModel 构造时已创建
+        // 使用 SpaceCardModel 中的 ContainerComponent 管理物品
         // 初始化 KPSpaceStoryManager
         firstSpace.InitSpaceStoryManager(this, cocText);
         

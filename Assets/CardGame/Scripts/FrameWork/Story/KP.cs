@@ -3,8 +3,7 @@ using UnityEngine;
 
 public class KP:SerializedMonoBehaviour
 {
-    public KPWorldMapManager kpWorldManager;
-    public KPPlaceSpaceManager KpPlaceManager;
+    public KPWorldMapManager kpWorldManagerManager;
     public KPSpaceStoryManager KpStoryManager;
     public KPWorldStoryManager KpWorldStoryManager;
 }

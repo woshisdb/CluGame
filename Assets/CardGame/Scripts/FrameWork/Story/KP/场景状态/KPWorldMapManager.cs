@@ -160,7 +160,7 @@ JSON格式：
             var newPlaceDescription = await GeneratePlaceDescription(locationName, cocText);
             
             // 使用 WorldMapSystem.AddSpaceCard 创建新的 SpaceCardModel
-            // SpaceCardModel 内部会自动创建 KPPlaceSpaceManager
+            // SpaceCardModel 内部会自动创建 ContainerComponent
             var newSpaceCardModel = GameFrameWork.Instance.WorldMapSystem.AddSpaceCard(locationName, newPlaceDescription);
             
             var newLocation = new WorldLocation
